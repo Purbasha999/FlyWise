@@ -59,6 +59,9 @@ const Home = () => {
         <div className="cloud c1" style={{ left: '3%' }} />
         <div className="cloud c2" style={{ left: '55%' }} />
         <div className="cloud c3" style={{ left: '25%' }} />
+        <div className="cloud c4" style={{ left: '75%' }} />
+        <div className="cloud c5" style={{ left: '10%' }} />
+        <div className="cloud c6" style={{ left: '40%' }} />
       </div>
 
       {/* Hero */}
