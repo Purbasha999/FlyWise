@@ -1,0 +1,224 @@
+import React, { useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useBooking } from '../context/BookingContext';
+import { format } from 'date-fns';
+import './Home.css';
+
+const DEALS = [
+  { from: 'Mumbai', to: 'Goa', price: '₹2,499', tag: 'Flash Sale', color: 'linear-gradient(135deg,#1a3a6e,#2d7dd2)' },
+  { from: 'Delhi', to: 'Bangalore', price: '₹3,799', tag: 'Weekend Deal', color: 'linear-gradient(135deg,#0f4c75,#1b6ca8,#44b3c4)' },
+  { from: 'Chennai', to: 'Mumbai', price: '₹2,999', tag: 'Monsoon Fare', color: 'linear-gradient(135deg,#1d5c63,#0f8b8d,#6bc5c7)' },
+  { from: 'Hyderabad', to: 'Delhi', price: '₹4,199', tag: 'Early Bird', color: 'linear-gradient(135deg,#4a1060,#7b1fa2,#ce93d8)' },
+  { from: 'Kolkata', to: 'Goa', price: '₹5,500', tag: 'Holiday Saver', color: 'linear-gradient(135deg,#b5451b,#e07a5f,#f4a261)' },
+];
+
+const PROMOS = [
+  { title: 'Student Special', sub: 'Exclusively on FlyWise web & app', perks: [['10kg','Extra baggage'],['Zero','Change fee'],['10%','Off fares']], color: '#185FA5' },
+  { title: 'Early Bird Offer', sub: 'Book 30 days ahead and save big', perks: [['₹2000','Instant savings'],['Free','Seat upgrade'],['2x','Reward points']], color: '#0F6E56' },
+  { title: 'FlyWise Plus', sub: 'Perks for frequent flyers', perks: [['Priority','Boarding'],['Lounge','Access'],['15%','Off fares']], color: '#5C1AAB' },
+  { title: 'Monsoon Sale', sub: 'Fly to your dream destination cheap', perks: [['40%','Off fares'],['Free','Cancellation'],['Extra','Miles']], color: '#B5451B' },
+];
+
+const DESTINATIONS = [
+  { name: 'Mumbai', code: 'BOM', emoji: '🌆', price: '₹2,500' },
+  { name: 'Delhi', code: 'DEL', emoji: '🏛️', price: '₹3,200', isNew: true },
+  { name: 'Goa', code: 'GOI', emoji: '🏖️', price: '₹2,200' },
+  { name: 'Bangalore', code: 'BLR', emoji: '🌿', price: '₹2,800', isNew: true },
+  { name: 'Hyderabad', code: 'HYD', emoji: '💎', price: '₹3,100' },
+  { name: 'Chennai', code: 'MAA', emoji: '🎭', price: '₹2,600' },
+  { name: 'Kolkata', code: 'CCU', emoji: '🌉', price: '₹3,400', isNew: true },
+  { name: 'Jaipur', code: 'JAI', emoji: '🏰', price: '₹2,900' },
+  { name: 'Dubai', code: 'DXB', emoji: '✨', price: '₹12,000', isNew: true },
+];
+
+const Home = () => {
+  const navigate = useNavigate();
+  const { setSearchParams } = useBooking();
+  const today = format(new Date(), 'yyyy-MM-dd');
+
+  const [form, setForm] = useState({ source: '', destination: '', date: today, passengers: 1 });
+  const [tripType, setTripType] = useState('one');
+  const [promoIdx, setPromoIdx] = useState(0);
+  const carouselRef = useRef(null);
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (!form.source || !form.destination || !form.date) return;
+    setSearchParams(form);
+    navigate(`/flights?source=${encodeURIComponent(form.source)}&destination=${encodeURIComponent(form.destination)}&date=${form.date}&passengers=${form.passengers}`);
+  };
+
+  const swap = () => setForm(f => ({ ...f, source: f.destination, destination: f.source }));
+
+  const promo = PROMOS[promoIdx];
+
+  return (
+    <div className="sky-page home-page">
+      {/* Clouds */}
+      <div className="clouds-wrap">
+        <div className="cloud c1" style={{ left: '3%' }} />
+        <div className="cloud c2" style={{ left: '55%' }} />
+        <div className="cloud c3" style={{ left: '25%' }} />
+      </div>
+
+      {/* Hero */}
+      <div className="home-hero">
+        <div className="hero-badge-pill">✈ Smart Flight Booking</div>
+        <h1 className="hero-heading">Fly <span>Smarter</span>,<br />Travel Further</h1>
+        <p className="hero-sub">Search hundreds of airlines · Real-time pricing · Instant confirmation</p>
+      </div>
+
+      {/* Search Card */}
+      <div className="search-card-wrap">
+        <div className="card-glass search-card">
+          <div className="trip-tabs">
+            {['one', 'round', 'multi'].map(t => (
+              <button key={t} className={`trip-tab${tripType === t ? ' active' : ''}`} onClick={() => setTripType(t)}>
+                {t === 'one' ? 'One Way' : t === 'round' ? 'Round Trip' : 'Multi-City'}
+              </button>
+            ))}
+          </div>
+          <form onSubmit={handleSearch} className="search-form">
+            <div className="form-group">
+              <label className="form-label">From</label>
+              <input className="form-input" placeholder="City or Airport" value={form.source} onChange={e => setForm(f => ({ ...f, source: e.target.value }))} required />
+            </div>
+            <button type="button" className="swap-btn" onClick={swap} title="Swap">⇄</button>
+            <div className="form-group">
+              <label className="form-label">To</label>
+              <input className="form-input" placeholder="City or Airport" value={form.destination} onChange={e => setForm(f => ({ ...f, destination: e.target.value }))} required />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Date</label>
+              <input className="form-input" type="date" min={today} value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))} required />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Passengers</label>
+              <select className="form-input" value={form.passengers} onChange={e => setForm(f => ({ ...f, passengers: parseInt(e.target.value) }))}>
+                {[1,2,3,4,5,6].map(n => <option key={n} value={n}>{n} {n === 1 ? 'Adult' : 'Adults'}</option>)}
+              </select>
+            </div>
+            <button type="submit" className="btn btn-primary btn-lg search-submit">Search Flights</button>
+          </form>
+        </div>
+      </div>
+
+      {/* Stats */}
+      <div className="stats-bar">
+        {[['500+','Airlines'],['200+','Destinations'],['2M+','Happy Flyers'],['₹0','Booking Fees']].map(([n,l]) => (
+          <div key={l} className="stat-item">
+            <div className="stat-num">{n}</div>
+            <div className="stat-label">{l}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Rest on white */}
+      <div className="home-sections">
+        {/* Hot Deals */}
+        <div className="section" id="deals">
+          <div className="section-header">
+            <div className="section-title">🔥 Hot Deals</div>
+          </div>
+          <div className="deals-scroll" ref={carouselRef}>
+            {DEALS.map((deal, i) => (
+              <div key={i} className="deal-card" style={{ background: deal.color }}>
+                <span className="deal-tag">{deal.tag}</span>
+                <div className="deal-route">{deal.from} → {deal.to}</div>
+                <div className="deal-bottom">
+                  <div>
+                    <div className="deal-from">from</div>
+                    <div className="deal-price">{deal.price}</div>
+                  </div>
+                  <button className="deal-btn" onClick={() => setForm(f => ({ ...f, source: deal.from, destination: deal.to }))}>
+                    Book Now
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Destinations */}
+        <div className="section">
+          <div className="section-header">
+            <div className="section-title">✨ Popular Destinations</div>
+          </div>
+          <div className="dest-row">
+            {DESTINATIONS.map(d => (
+              <div key={d.code} className="dest-card" onClick={() => setForm(f => ({ ...f, destination: d.name }))}>
+                <div className="dest-circle">
+                  <span className="dest-emoji">{d.emoji}</span>
+                  {d.isNew && <span className="dest-new">New</span>}
+                </div>
+                <div className="dest-name">{d.name}</div>
+                <div className="dest-price">{d.price}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Promo Banner */}
+        <div className="section">
+          <div className="promo-banner" style={{ background: promo.color }}>
+            <div className="promo-left">
+              <div className="promo-kicker">✦ Limited Time Offer</div>
+              <div className="promo-title">{promo.title}</div>
+              <div className="promo-sub">{promo.sub}</div>
+              <div className="promo-perks">
+                {promo.perks.map(([val, label]) => (
+                  <div key={label} className="promo-perk">
+                    <span className="perk-val">{val}</span>
+                    <span className="perk-label">{label}</span>
+                  </div>
+                ))}
+              </div>
+              <button className="btn promo-btn">Claim Offer</button>
+            </div>
+            <div className="promo-dots">
+              {PROMOS.map((_, i) => (
+                <div key={i} className={`pdot${promoIdx === i ? ' active' : ''}`} onClick={() => setPromoIdx(i)} />
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Why FlyWise */}
+        <div className="section why-section">
+          <div className="section-header">
+            <div className="section-title">Why FlyWise?</div>
+          </div>
+          <div className="features-grid">
+            {[
+              ['💺', 'Smart Seat Selection', 'Choose window, aisle, or extra legroom with live availability', '#E6F1FB'],
+              ['💰', 'Best Price Guarantee', 'Dynamic pricing engine finds the sharpest fares on every route', '#E1F5EE'],
+              ['🔒', 'Instant Seat Lock', 'Seats lock the moment you select — no race conditions, ever', '#FAEEDA'],
+              ['📱', 'Easy Cancellations', 'Cancel or modify bookings anytime with zero hassle', '#FAECE7'],
+            ].map(([icon, title, desc, bg]) => (
+              <div key={title} className="feature-card">
+                <div className="feature-icon" style={{ background: bg }}>{icon}</div>
+                <div className="feature-title">{title}</div>
+                <div className="feature-desc">{desc}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <footer className="home-footer">
+        <div className="footer-logo">
+          <span className="footer-logo-icon">✈</span> FlyWise
+        </div>
+        <div className="footer-links">
+          <a href="#deals">Deals</a>
+          <a href="#!">Privacy</a>
+          <a href="#!">Terms</a>
+          <a href="#!">Contact</a>
+        </div>
+        <p className="footer-copy">© 2025 FlyWise · Smart Flight Booking</p>
+      </footer>
+    </div>
+  );
+};
+
+export default Home;
