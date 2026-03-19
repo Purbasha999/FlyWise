@@ -121,19 +121,90 @@ const downloadTicket = async () => {
       </div>
 
       <div className="bc-actions">
-        <button className="btn btn-ghost btn-sm" onClick={() => setExpanded(!expanded)}>
-          {expanded ? '▲ Hide Details' : '▼ View Details'}
-        </button>
-        <button className="btn btn-primary btn-sm" onClick={downloadTicket}>
-  Download Ticket
-</button>
-        {booking.bookingStatus === 'CONFIRMED' && (
-          <button className="btn btn-danger btn-sm" onClick={handleCancel} disabled={cancelling}>
-            {cancelling ? <><div className="spinner" /> Cancelling...</> : 'Cancel Booking'}
-          </button>
+  {/* LEFT (UNCHANGED FUNCTIONALITY) */}
+  <button
+    className="btn btn-ghost btn-sm"
+    onClick={() => setExpanded(!expanded)}
+  >
+    {expanded ? '▲ Hide Details' : '▼ View Details'}
+  </button>
 
-        )}
+  {/* RIGHT SIDE */}
+  <div className="bc-actions-right">
+    <button
+      className="btn btn-primary btn-sm"
+      onClick={downloadTicket}
+    >
+      Download Ticket
+    </button>
+
+    {booking.bookingStatus === 'CONFIRMED' && (
+      <button
+        className="btn btn-danger btn-sm"
+        onClick={handleCancel}
+        disabled={cancelling}
+      >
+        {cancelling ? 'Cancelling...' : 'Cancel Booking'}
+      </button>
+    )}
+  </div>
+</div>
+{expanded && (
+  <div className="bc-expanded">
+    
+    {/* PASSENGERS */}
+    <div className="bc-exp-section">
+      <div className="bc-exp-title">Passengers</div>
+      <div className="bc-passengers">
+        {booking.passengers?.map((p, i) => (
+          <div key={i} className="bc-passenger">
+            <span className="bc-pax-num">{i + 1}</span>
+            <span className="bc-pax-name">{p.name}</span>
+            <span className="bc-pax-age">Age {p.age}</span>
+            <span className="bc-pax-gender">{p.gender}</span>
+            <span className="badge badge-blue">{p.seatNumber}</span>
+          </div>
+        ))}
       </div>
+    </div>
+
+    {/* PRICE */}
+    <div className="bc-exp-section">
+      <div className="bc-exp-title">Price Breakdown</div>
+      <div className="bc-price-table">
+        <div className="bc-pr">
+          <span>Base Fare</span>
+          <span>₹{booking.priceBreakdown?.basePrice}</span>
+        </div>
+
+        <div className="bc-pr">
+          <span>Taxes & GST</span>
+          <span>₹{booking.priceBreakdown?.taxes}</span>
+        </div>
+
+        {booking.priceBreakdown?.mealTotal > 0 && (
+          <div className="bc-pr">
+            <span>Meals</span>
+            <span>₹{booking.priceBreakdown.mealTotal}</span>
+          </div>
+        )}
+
+        {booking.priceBreakdown?.baggageTotal > 0 && (
+          <div className="bc-pr">
+            <span>Baggage</span>
+            <span>₹{booking.priceBreakdown.baggageTotal}</span>
+          </div>
+        )}
+
+        <div className="bc-pr total">
+          <span>Total</span>
+          <span>₹{booking.priceBreakdown?.totalPrice}</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+)}
 
       <div
   id={`ticket-${booking._id}`}
