@@ -16,6 +16,7 @@ import BookingSummary from './pages/BookingSummary';
 import Dashboard from './pages/Dashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import AddOnsSection from './pages/AddOnsSection';
+import PaymentPage from './pages/PaymentPage';
 
 const App = () => {
   return (
@@ -76,6 +77,14 @@ const App = () => {
                 <AddOnsSection/>
               </ProtectedRoute>
             }
+          ></Route>
+          <Route path="/payment"
+            element={
+              <ProtectedRoute>
+                <PaymentPage/>
+              </ProtectedRoute>
+            }
+          
             ></Route>
             <Route
               path="/admin"

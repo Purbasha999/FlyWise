@@ -54,31 +54,25 @@ const baggageTotal = selectedAddOns
     setPassengerForms(forms => forms.map((form, idx) => idx === i ? { ...form, [field]: value } : form));
   };
 
-  const handleConfirm = async () => {
-    const invalid = passengerForms.find(p => !p.name || !p.age);
-    if (invalid) { toast.error('Please fill in all passenger details'); return; }
+  const handleConfirm = () => {
+  const invalid = passengerForms.find(p => !p.name || !p.age);
+  if (invalid) {
+    toast.error('Please fill in all passenger details');
+    return;
+  }
 
-    try {
-      setBooking(true);
-      // Get fresh pricing with selected seats
-      const priceRes = await getFlightPrice(f._id, { seatNumbers: selectedSeats, passengers });
-      const pricing = priceRes.data.pricing;
-
-      const res = await createBooking({
-        flightId: f._id,
+  navigate('/payment', {
+    state: {
+      bookingData: {
+        flight: selectedFlight,
         seatNumbers: selectedSeats,
         passengers: passengerForms,
-        addOns: selectedAddOns
-      });
-      setConfirmed(res.data.booking);
-      clearBooking();
-      toast.success('🎉 Booking confirmed!');
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Booking failed. Please try again.');
-    } finally {
-      setBooking(false);
+        addons: selectedAddOns,
+        totalPrice: pb.totalPrice + addOnTotal
+      }
     }
-  };
+  });
+};
 
   if (confirmed) {
     return (
@@ -125,7 +119,6 @@ const baggageTotal = selectedAddOns
       </div>
 
       <div className="section summary-layout">
-        {/* Left: passenger forms */}
         <div className="summary-left">
           <div className="card summary-card">
             <h3 className="sc-title">Passenger Details</h3>
@@ -159,7 +152,6 @@ const baggageTotal = selectedAddOns
 />
         </div>
 
-        {/* Right: summary */}
         <div className="summary-right">
           {/* Flight summary */}
           <div className="card summary-card">
@@ -192,7 +184,7 @@ const baggageTotal = selectedAddOns
             </div>
           </div>
 
-          {/* Price */}
+          {/* price */}
           <div className="card summary-card">
             <h3 className="sc-title">Price Breakdown</h3>
             <div className="price-rows">

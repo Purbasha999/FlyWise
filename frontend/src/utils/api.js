@@ -53,6 +53,7 @@ export const getAllBookings = () => API.get('/bookings/all');
 export const getStats = () => API.get('/bookings/stats');
 
 export const getAddOns = (params) => API.get('/addons', { params });
+export const applyPromoCode = (data) => API.post('/promo/apply', data);
 
 
 export default API;
