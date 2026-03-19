@@ -15,6 +15,7 @@ import SeatSelection from './pages/SeatSelection';
 import BookingSummary from './pages/BookingSummary';
 import Dashboard from './pages/Dashboard';
 import AdminDashboard from './pages/AdminDashboard';
+import AddOnsSection from './pages/AddOnsSection';
 
 const App = () => {
   return (
@@ -69,6 +70,13 @@ const App = () => {
                 </ProtectedRoute>
               }
             />
+            <Route path="/addons"
+            element={
+              <ProtectedRoute>
+                <AddOnsSection/>
+              </ProtectedRoute>
+            }
+            ></Route>
             <Route
               path="/admin"
               element={

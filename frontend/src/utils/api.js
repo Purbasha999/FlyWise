@@ -52,4 +52,7 @@ export const cancelBooking = (id, data) => API.put(`/bookings/${id}/cancel`, dat
 export const getAllBookings = () => API.get('/bookings/all');
 export const getStats = () => API.get('/bookings/stats');
 
+export const getAddOns = (params) => API.get('/addons', { params });
+
+
 export default API;

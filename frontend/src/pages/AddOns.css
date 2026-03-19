@@ -1,0 +1,44 @@
+.addons-container {
+  margin-top: 20px;
+  padding: 16px;
+}
+
+.addons-tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.addons-tabs button {
+  padding: 6px 12px;
+  border: none;
+  background: #eee;
+  border-radius: 20px;
+  cursor: pointer;
+}
+
+.addons-tabs .active {
+  background: #1a73e8;
+  color: white;
+}
+
+.addons-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.addon-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid #ddd;
+  padding: 10px;
+  border-radius: 10px;
+}
+
+.addon-card img {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+}

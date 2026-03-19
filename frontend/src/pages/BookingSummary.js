@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useBooking } from '../context/BookingContext';
 import { useAuth } from '../context/AuthContext';
+import AddOnsSection from './AddOnsSection';
 import { createBooking, getFlightPrice } from '../utils/api';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
@@ -24,6 +25,10 @@ const BookingSummary = () => {
       gender: 'MALE',
     }))
   );
+
+  const [selectedAddOns, setSelectedAddOns] = useState([]);
+
+
   const [booking, setBooking] = useState(false);
   const [confirmed, setConfirmed] = useState(null);
 
@@ -34,6 +39,16 @@ const BookingSummary = () => {
 
   const f = selectedFlight;
   const pb = f.priceBreakdown || {};
+
+  const addOnTotal = selectedAddOns.reduce((sum, item) => sum + item.price, 0);
+
+  const mealTotal = selectedAddOns
+  .filter(item => item.type === "meal")
+  .reduce((sum, item) => sum + item.price, 0);
+
+const baggageTotal = selectedAddOns
+  .filter(item => item.type === "baggage")
+  .reduce((sum, item) => sum + item.price, 0);
 
   const updatePassenger = (i, field, value) => {
     setPassengerForms(forms => forms.map((form, idx) => idx === i ? { ...form, [field]: value } : form));
@@ -53,6 +68,7 @@ const BookingSummary = () => {
         flightId: f._id,
         seatNumbers: selectedSeats,
         passengers: passengerForms,
+        addOns: selectedAddOns
       });
       setConfirmed(res.data.booking);
       clearBooking();
@@ -72,6 +88,16 @@ const BookingSummary = () => {
           <h1 className="confirm-title">Booking Confirmed!</h1>
           <p className="confirm-sub">Your booking reference is</p>
           <div className="confirm-ref">{confirmed.bookingRef}</div>
+          {confirmed.addOns?.length > 0 && (
+  <div className="confirm-addons">
+    <strong>Add-ons:</strong>
+    {confirmed.addOns.map((item, i) => (
+      <div key={i}>
+        {item.name} - ₹{item.price}
+      </div>
+    ))}
+  </div>
+)}
           <div className="confirm-details card">
             <div className="confirm-route">
               {confirmed.flightId?.source?.city} → {confirmed.flightId?.destination?.city}
@@ -127,6 +153,10 @@ const BookingSummary = () => {
               </div>
             ))}
           </div>
+          <AddOnsSection 
+  selected={selectedAddOns} 
+  setSelected={setSelectedAddOns} 
+/>
         </div>
 
         {/* Right: summary */}
@@ -171,13 +201,26 @@ const BookingSummary = () => {
               {pb.lastMinuteSurcharge > 0 && <div className="price-row surcharge"><span>Last-minute</span><span>+₹{pb.lastMinuteSurcharge?.toLocaleString('en-IN')}</span></div>}
               {pb.seatCharges > 0 && <div className="price-row"><span>Seat charges</span><span>+₹{pb.seatCharges?.toLocaleString('en-IN')}</span></div>}
               <div className="price-row"><span>Taxes & GST (18%)</span><span>₹{pb.taxes?.toLocaleString('en-IN')}</span></div>
+              {mealTotal > 0 && (
+                <div className="price-row">
+                <span>Meals</span>
+                <span>+₹{mealTotal.toLocaleString('en-IN')}</span>
+                </div>
+              )}
+
+{baggageTotal > 0 && (
+  <div className="price-row">
+    <span>Excess Baggage</span>
+    <span>+₹{baggageTotal.toLocaleString('en-IN')}</span>
+  </div>
+)}
               <hr className="divider" />
-              <div className="price-row total"><span>Total Amount</span><span>₹{pb.totalPrice?.toLocaleString('en-IN')}</span></div>
+              <div className="price-row total"><span>Total Amount</span><span>₹{(pb.totalPrice+addOnTotal).toLocaleString('en-IN')}</span></div>
             </div>
           </div>
 
           <button className="btn btn-primary btn-lg btn-full" onClick={handleConfirm} disabled={booking}>
-            {booking ? <><div className="spinner" /> Confirming...</> : '✓ Confirm & Pay ₹' + (pb.totalPrice?.toLocaleString('en-IN') || '')}
+            {booking ? <><div className="spinner" /> Confirming...</> : '✓ Confirm & Pay ₹' + ((pb.totalPrice+addOnTotal).toLocaleString('en-IN') || '')}
           </button>
           <p className="summary-tnc">By confirming, you agree to our Terms & Conditions. Fare includes all taxes.</p>
         </div>
