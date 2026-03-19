@@ -33,6 +33,25 @@ const BookingCard = ({ booking, onCancel }) => {
 
   if (!f) return null;
 
+  // group addons by type + name
+const groupAddOns = (addOns = []) => {
+  const map = {};
+
+  addOns.forEach(item => {
+    const key = item.name;
+
+    if (!map[key]) {
+      map[key] = { ...item, qty: 1 };
+    } else {
+      map[key].qty += 1;
+    }
+  });
+
+  return Object.values(map);
+};
+
+const groupedAddOns = groupAddOns(booking.addOns);
+
   return (
     <div className={`booking-card ${booking.bookingStatus === 'CANCELLED' ? 'cancelled' : ''}`}>
       <div className="bc-top">
@@ -113,8 +132,41 @@ const BookingCard = ({ booking, onCancel }) => {
               {booking.priceBreakdown?.lastMinuteSurcharge > 0 && <div className="bc-pr surcharge"><span>Last-Minute Surcharge</span><span>+₹{booking.priceBreakdown.lastMinuteSurcharge?.toLocaleString('en-IN')}</span></div>}
               {booking.priceBreakdown?.seatCharges > 0 && <div className="bc-pr"><span>Seat Charges</span><span>₹{booking.priceBreakdown.seatCharges?.toLocaleString('en-IN')}</span></div>}
               <div className="bc-pr"><span>Taxes & GST</span><span>₹{booking.priceBreakdown?.taxes?.toLocaleString('en-IN')}</span></div>
+              {booking.priceBreakdown?.mealTotal > 0 && (
+      <div className="bc-pr">
+        <span>Meals</span>
+        <span>+₹{booking.priceBreakdown.mealTotal.toLocaleString('en-IN')}</span>
+      </div>
+    )}
+
+    {booking.priceBreakdown?.baggageTotal > 0 && (
+      <div className="bc-pr">
+        <span>Baggage</span>
+        <span>+₹{booking.priceBreakdown.baggageTotal.toLocaleString('en-IN')}</span>
+      </div>
+    )}
               <div className="bc-pr total"><span>Total</span><span>₹{booking.priceBreakdown?.totalPrice?.toLocaleString('en-IN')}</span></div>
             </div>
+            {groupedAddOns.length > 0 && (
+  <div className="bc-exp-section">
+    <div className="bc-exp-title">Add-ons</div>
+
+    <div className="bc-addons-list">
+      {groupedAddOns.map((item, i) => (
+        <div key={i} className="bc-addon-item">
+          <span>
+            {item.type === "meal" ? "🍽" : "🧳"} {item.name}
+            {item.qty > 1 && ` (x${item.qty})`}
+          </span>
+
+          <span>
+            ₹{(item.price * item.qty).toLocaleString('en-IN')}
+          </span>
+        </div>
+      ))}
+    </div>
+  </div>
+)}
           </div>
 
           {booking.bookingStatus === 'CANCELLED' && (

@@ -6,7 +6,7 @@ const { calculatePrice } = require('../middleware/pricing');
 // @desc    Create booking
 // @route   POST /api/bookings
 const createBooking = async (req, res) => {
-  const { flightId, seatNumbers, passengers } = req.body;
+  const { flightId, seatNumbers, passengers , addOns=[]} = req.body;
   const userId = req.user._id;
 
   if (!flightId || !seatNumbers?.length || !passengers?.length) {
@@ -34,6 +34,17 @@ const createBooking = async (req, res) => {
   // Calculate final price
   const pricing = calculatePrice(flight, seats, passengers.length);
 
+  // addons calculation
+const addOnTotal = addOns.reduce((sum, item) => sum + item.price, 0);
+
+const mealTotal = addOns
+  .filter(a => a.type === "meal")
+  .reduce((sum, a) => sum + a.price, 0);
+
+const baggageTotal = addOns
+  .filter(a => a.type === "baggage")
+  .reduce((sum, a) => sum + a.price, 0);
+
   // Build seat details
   const seatDetails = seats.map(seat => ({
     seatId: seat._id,
@@ -51,6 +62,7 @@ const createBooking = async (req, res) => {
   const booking = await Booking.create({
     userId,
     flightId,
+    addOns,
     seats: seatDetails,
     passengers: passengersWithSeats,
     priceBreakdown: {
@@ -59,7 +71,10 @@ const createBooking = async (req, res) => {
       lastMinuteSurcharge: pricing.lastMinuteSurcharge,
       seatCharges: pricing.seatCharges,
       taxes: pricing.taxes,
-      totalPrice: pricing.totalPrice,
+      mealTotal,
+      baggageTotal,
+      addOnTotal,
+      totalPrice: pricing.totalPrice+addOnTotal,
     },
     bookingStatus: 'CONFIRMED',
     paymentStatus: 'PAID',

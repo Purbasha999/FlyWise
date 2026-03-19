@@ -34,6 +34,9 @@ const bookingSchema = new mongoose.Schema({
     lastMinuteSurcharge: { type: Number, default: 0 },
     seatCharges: { type: Number, default: 0 },
     taxes: { type: Number, default: 0 },
+    mealTotal: { type: Number, default: 0 },
+    baggageTotal: { type: Number, default: 0 },
+    addOnTotal: { type: Number, default: 0 },
     totalPrice: { type: Number, required: true },
   },
   bookingStatus: {
