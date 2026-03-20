@@ -404,3 +404,15 @@
 .ticket-section {
   margin-top: 10px;
 }
+
+.asc-img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+
+.asc-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

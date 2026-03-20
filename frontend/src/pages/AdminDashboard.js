@@ -136,18 +136,26 @@ const AdminDashboard = () => {
           <div>
             <div className="admin-stats-grid">
               {[
-                ['Total Bookings', stats.totalBookings, '🎫', 'blue'],
-                ['Confirmed', stats.confirmedBookings, '✅', 'green'],
-                ['Cancelled', stats.cancelledBookings, '❌', 'red'],
-                ['Total Revenue', `₹${stats.totalRevenue?.toLocaleString('en-IN')}`, '💰', 'amber'],
-                ['Active Flights', stats.totalFlights, '✈', 'blue'],
-              ].map(([label, val, icon, color]) => (
-                <div key={label} className={`admin-stat-card ac-${color}`}>
-                  <div className="asc-icon">{icon}</div>
-                  <div className="asc-val">{val}</div>
-                  <div className="asc-label">{label}</div>
-                </div>
-              ))}
+  ['Total Bookings', stats.totalBookings, '/ticket-flight.png', 'blue'],
+  ['Confirmed', stats.confirmedBookings, '/check.png', 'green'],
+  ['Cancelled', stats.cancelledBookings, '/cancel.png', 'red'],
+  ['Total Revenue', `₹${stats.totalRevenue?.toLocaleString('en-IN')}`, '/money.png', 'amber'],
+  ['Active Flights', stats.totalFlights, '/plane.png', 'blue'], 
+].map(([label, val, icon, color]) => (
+  <div key={label} className={`admin-stat-card ac-${color}`}>
+    
+    <div className="asc-icon">
+      {typeof icon === 'string' && icon.startsWith('/') ? (
+        <img src={icon} alt={label} className="asc-img" />
+      ) : (
+        icon
+      )}
+    </div>
+
+    <div className="asc-val">{val}</div>
+    <div className="asc-label">{label}</div>
+  </div>
+))}
             </div>
 
             <div className="admin-info-cards">

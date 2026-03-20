@@ -233,3 +233,30 @@
   .aff-grid { grid-template-columns: 1fr 1fr; }
   .flights-table-wrap, .bookings-table-wrap { overflow-x: auto; }
 }
+
+
+.feature-img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+
+.feature-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  width: 60px;
+  height: 60px;
+}
+.asc-img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+
+.asc-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

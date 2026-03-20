@@ -318,3 +318,18 @@
 .c8 { width: 120px; height: 34px; top: 80%; opacity: 0.5; animation: drift 26s linear infinite 15s; }
 .c8::before { width: 60px; height: 45px; top: -20px; left: 15px; }
 .c8::after  { width: 40px; height: 36px; top: -12px; left: 60px; }
+
+.feature-img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+
+.feature-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  width: 60px;
+  height: 60px;
+}

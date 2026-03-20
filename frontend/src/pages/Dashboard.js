@@ -372,13 +372,13 @@ const Dashboard = () => {
         {/* Stats */}
         <div className="dash-stats">
           {[
-            ['Total Trips', stats.total, '✈'],
-            ['Confirmed', stats.confirmed, '✅'],
-            ['Cancelled', stats.cancelled, '❌'],
-            ['Total Spent', `₹${stats.spent.toLocaleString('en-IN')}`, '💰'],
+            ['Total Trips', stats.total, '/plane.png'],
+            ['Confirmed', stats.confirmed, '/check.png'],
+            ['Cancelled', stats.cancelled, '/cancel.png'],
+            ['Total Spent', `₹${stats.spent.toLocaleString('en-IN')}`, 'flying-money.png'],
           ].map(([label, val, icon]) => (
             <div key={label} className="dash-stat-card">
-              <div className="dash-stat-icon">{icon}</div>
+              <img src={icon} alt={label} className="asc-img" />
               <div className="dash-stat-val">{val}</div>
               <div className="dash-stat-label">{label}</div>
             </div>

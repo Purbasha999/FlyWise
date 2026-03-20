@@ -126,7 +126,7 @@ const Home = () => {
         {/* Hot Deals */}
         <div className="section" id="deals">
           <div className="section-header">
-            <div className="section-title">🔥 Hot Deals</div>
+            <div className="section-title">Hot Deals</div>
           </div>
           <div className="deals-scroll" ref={carouselRef}>
             {DEALS.map((deal, i) => (
@@ -150,7 +150,7 @@ const Home = () => {
         {/* Destinations */}
         <div className="section">
           <div className="section-header">
-            <div className="section-title">✨ Popular Destinations</div>
+            <div className="section-title">Popular Destinations</div>
           </div>
           <div className="dest-row">
             {DESTINATIONS.map(d => (
@@ -198,13 +198,13 @@ const Home = () => {
           </div>
           <div className="features-grid">
             {[
-              ['💺', 'Smart Seat Selection', 'Choose window, aisle, or extra legroom with live availability', '#E6F1FB'],
-              ['💰', 'Best Price Guarantee', 'Dynamic pricing engine finds the sharpest fares on every route', '#E1F5EE'],
-              ['🔒', 'Instant Seat Lock', 'Seats lock the moment you select — no race conditions, ever', '#FAEEDA'],
-              ['📱', 'Easy Cancellations', 'Cancel or modify bookings anytime with zero hassle', '#FAECE7'],
+              ['/passenger.png', 'Smart Seat Selection', 'Choose window, aisle, or extra legroom with live availability', '#E6F1FB'],
+              ['/flying-money.png', 'Best Price Guarantee', 'Dynamic pricing engine finds the sharpest fares on every route', '#E1F5EE'],
+              ['/padlock.png', 'Instant Seat Lock', 'Seats lock the moment you select — no race conditions, ever', '#FAEEDA'],
+              ['/cancel.png', 'Easy Cancellations', 'Cancel or modify bookings anytime with zero hassle', '#FAECE7'],
             ].map(([icon, title, desc, bg]) => (
               <div key={title} className="feature-card">
-                <div className="feature-icon" style={{ background: bg }}>{icon}</div>
+                <div className="feature-icon" style={{ background: bg }}><img src={icon} alt={title} className="feature-img" /></div>
                 <div className="feature-title">{title}</div>
                 <div className="feature-desc">{desc}</div>
               </div>
