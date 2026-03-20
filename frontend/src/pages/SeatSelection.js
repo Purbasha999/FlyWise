@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState,useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useBooking } from '../context/BookingContext';
 import { useAuth } from '../context/AuthContext';
@@ -20,15 +20,15 @@ const SeatSelection = () => {
   const [pricing, setPricing] = useState(null);
   const [loadingPrice, setLoadingPrice] = useState(false);
 
+  useEffect(() => {
   if (!selectedFlight) {
     navigate('/');
-    return null;
-  }
-
-  if (!isAuthenticated) {
+  } else if (!isAuthenticated) {
     navigate('/login?redirect=/seats');
-    return null;
   }
+}, [selectedFlight, isAuthenticated, navigate]);
+
+if (!selectedFlight || !isAuthenticated) return null;
 
   const passengers = searchParams.passengers || 1;
 

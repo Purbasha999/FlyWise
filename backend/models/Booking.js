@@ -28,6 +28,14 @@ const bookingSchema = new mongoose.Schema({
     gender: { type: String, enum: ['MALE', 'FEMALE', 'OTHER'] },
     seatNumber: String,
   }],
+  addOns: [
+  {
+    name: String,
+    price: Number,
+    type: String,
+    baggageWeight: Number,
+  }
+],
   priceBreakdown: {
     basePrice: { type: Number, required: true },
     demandSurcharge: { type: Number, default: 0 },

@@ -393,3 +393,14 @@
   display: flex;
   gap: 10px;
 }
+
+.ticket-subtitle {
+  margin-top: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #185FA5;
+}
+
+.ticket-section {
+  margin-top: 10px;
+}

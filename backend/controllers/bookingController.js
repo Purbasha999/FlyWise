@@ -34,14 +34,42 @@ const createBooking = async (req, res) => {
   // Calculate final price
   const pricing = calculatePrice(flight, seats, passengers.length);
 
-  // addons calculation
-const addOnTotal = addOns.reduce((sum, item) => sum + item.price, 0);
+let safeAddOns = [];
 
-const mealTotal = addOns
+// DEBUG (add this temporarily)
+console.log("ADDONS RECEIVED:", addOns);
+console.log("TYPE:", typeof addOns);
+console.log("IS ARRAY:", Array.isArray(addOns));
+
+// HANDLE EVERYTHING
+if (Array.isArray(addOns)) {
+  safeAddOns = addOns;
+} else if (typeof addOns === "string") {
+  try {
+    safeAddOns = JSON.parse(addOns);
+  } catch {
+    safeAddOns = [];
+  }
+}
+
+if (!Array.isArray(safeAddOns)) {
+  safeAddOns = [];
+}
+
+const cleanedAddOns = safeAddOns.map(a => ({
+  name: a?.name || "Unknown",
+  price: Number(a?.price) || 0,
+  type: a?.type || (a?.baggageWeight ? "baggage" : "meal"),
+  baggageWeight: a?.baggageWeight || null
+}));
+
+const addOnTotal = cleanedAddOns.reduce((sum, a) => sum + a.price, 0);
+
+const mealTotal = cleanedAddOns
   .filter(a => a.type === "meal")
   .reduce((sum, a) => sum + a.price, 0);
 
-const baggageTotal = addOns
+const baggageTotal = cleanedAddOns
   .filter(a => a.type === "baggage")
   .reduce((sum, a) => sum + a.price, 0);
 
@@ -59,10 +87,12 @@ const baggageTotal = addOns
     seatNumber: seatNumbers[i] || seatNumbers[0],
   }));
 
+
+  const { totalPrice, discount = 0 } = req.body;
   const booking = await Booking.create({
     userId,
     flightId,
-    addOns,
+    addOns:cleanedAddOns,
     seats: seatDetails,
     passengers: passengersWithSeats,
     priceBreakdown: {
@@ -74,7 +104,9 @@ const baggageTotal = addOns
       mealTotal,
       baggageTotal,
       addOnTotal,
-      totalPrice: pricing.totalPrice+addOnTotal,
+      originalPrice: pricing.totalPrice + addOnTotal,
+      discount,
+      totalPrice: totalPrice,
     },
     bookingStatus: 'CONFIRMED',
     paymentStatus: 'PAID',
@@ -107,6 +139,7 @@ const baggageTotal = addOns
 const getMyBookings = async (req, res) => {
   const bookings = await Booking.find({ userId: req.user._id })
     .populate('flightId', 'flightNumber airline source destination departureTime arrivalTime duration aircraft')
+    .select('+addOns')
     .sort({ createdAt: -1 });
 
   res.json({ success: true, count: bookings.length, bookings });

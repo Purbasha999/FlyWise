@@ -67,7 +67,7 @@ const baggageTotal = selectedAddOns
         flight: selectedFlight,
         seatNumbers: selectedSeats,
         passengers: passengerForms,
-        addons: selectedAddOns,
+        addOns: selectedAddOns,
         totalPrice: pb.totalPrice + addOnTotal
       }
     }
