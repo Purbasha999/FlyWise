@@ -36,16 +36,21 @@ const Home = () => {
   const { setSearchParams } = useBooking();
   const today = format(new Date(), 'yyyy-MM-dd');
 
-  const [form, setForm] = useState({ source: '', destination: '', date: today, passengers: 1 });
+  const [form, setForm] = useState({ source: '', destination: '', date: '', passengers: 1 });
   const [tripType, setTripType] = useState('one');
   const [promoIdx, setPromoIdx] = useState(0);
   const carouselRef = useRef(null);
 
   const handleSearch = (e) => {
     e.preventDefault();
-    if (!form.source || !form.destination || !form.date) return;
+    if (!form.source || !form.destination) return;
     setSearchParams(form);
-    navigate(`/flights?source=${encodeURIComponent(form.source)}&destination=${encodeURIComponent(form.destination)}&date=${form.date}&passengers=${form.passengers}`);
+    let url = `/flights?source=${encodeURIComponent(form.source)}&destination=${encodeURIComponent(form.destination)}&passengers=${form.passengers}`;
+    
+    if (form.date) {
+      url += `&date=${form.date}`;
+    }
+    navigate(url);
   };
 
   const swap = () => setForm(f => ({ ...f, source: f.destination, destination: f.source }));
@@ -93,7 +98,7 @@ const Home = () => {
             </div>
             <div className="form-group">
               <label className="form-label">Date</label>
-              <input className="form-input" type="date" min={today} value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))} required />
+              <input className="form-input" type="date" min={today} value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))}  />
             </div>
             <div className="form-group">
               <label className="form-label">Passengers</label>

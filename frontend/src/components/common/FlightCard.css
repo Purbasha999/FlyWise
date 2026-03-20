@@ -184,3 +184,13 @@
     justify-content: space-between;
   }
 }
+
+.fc-date-pill {
+  background: #eef5ff;
+  color: #185FA5;
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  display: inline-block;
+  margin-bottom: 8px;
+}

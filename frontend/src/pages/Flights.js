@@ -25,17 +25,32 @@ const Flights = () => {
     fetchFlights();
   }, [source, destination, date]);
 
-  const fetchFlights = async () => {
-    try {
-      setLoading(true);
-      const res = await searchFlights({ source, destination, date, passengers });
+  const [noFlightsOnDate, setNoFlightsOnDate] = useState(false);
+
+const fetchFlights = async () => {
+  try {
+    setLoading(true);
+
+    // 1️⃣ Try with date (if provided)
+    let res = await searchFlights({ source, destination, date, passengers });
+
+    if (date && res.data.flights.length === 0) {
+      
+      setNoFlightsOnDate(true);
+
+      const altRes = await searchFlights({ source, destination, passengers });
+      setFlights(altRes.data.flights);
+    } else {
+      setNoFlightsOnDate(false);
       setFlights(res.data.flights);
-    } catch (err) {
-      toast.error('Failed to fetch flights');
-    } finally {
-      setLoading(false);
     }
-  };
+
+  } catch (err) {
+    toast.error('Failed to fetch flights');
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleSelectFlight = (flight) => {
     setSelectedFlight(flight);
@@ -60,7 +75,9 @@ const Flights = () => {
           <div className="flights-title-row">
             <div>
               <h1 className="flights-title">{source} → {destination}</h1>
-              <p className="flights-meta">{date} · {passengers} passenger{passengers > 1 ? 's' : ''} · {flights.length} flight{flights.length !== 1 ? 's' : ''} found</p>
+              <p className="flights-meta">
+  {date ? date : "All Dates"} · {passengers} passenger...
+</p>
             </div>
             <div className="sort-bar">
               <span className="sort-label">Sort by:</span>
@@ -87,11 +104,20 @@ const Flights = () => {
             <button className="btn btn-primary" onClick={() => navigate('/')}>Search Again</button>
           </div>
         ) : (
+          <>
+          {noFlightsOnDate && (
+        <div className="no-date-warning">
+          ❌ No flights available on selected date  
+          <br />
+          ✅ Showing flights on other dates
+        </div>
+      )}
           <div className="flight-list">
             {sorted.map(flight => (
               <FlightCard key={flight._id} flight={flight} passengers={passengers} onSelect={handleSelectFlight} />
             ))}
           </div>
+          </>
         )}
       </div>
     </div>

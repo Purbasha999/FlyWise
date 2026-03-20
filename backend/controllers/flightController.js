@@ -33,26 +33,48 @@ const createSeatsForFlight = async (flightId, totalSeats = 60) => {
 // @desc    Search flights
 // @route   GET /api/flights/search
 const searchFlights = async (req, res) => {
+  const now = new Date();
   const { source, destination, date, passengers = 1 } = req.query;
 
-  if (!source || !destination || !date) {
-    return res.status(400).json({ success: false, message: 'Source, destination, and date are required.' });
+  if (!source || !destination) {
+    return res.status(400).json({
+      success: false,
+      message: 'Source and destination are required.',
+    });
   }
 
-  const searchDate = new Date(date);
-  const nextDay = new Date(searchDate);
-  nextDay.setDate(nextDay.getDate() + 1);
+  // ⛔ 10-hour rule
+  const minTime = new Date(now.getTime() + 10 * 60 * 60 * 1000);
 
-  const flights = await Flight.find({
+  let departureFilter;
+
+  if (date) {
+    const searchDate = new Date(date);
+    const nextDay = new Date(searchDate);
+    nextDay.setDate(nextDay.getDate() + 1);
+
+    departureFilter = {
+      $gte: new Date(Math.max(searchDate, minTime)), // 🔥 important
+      $lt: nextDay,
+    };
+  } else {
+    // no date → future flights only
+    departureFilter = {
+      $gte: minTime,
+    };
+  }
+
+  const query = {
     'source.city': { $regex: source, $options: 'i' },
     'destination.city': { $regex: destination, $options: 'i' },
-    departureTime: { $gte: searchDate, $lt: nextDay },
     isActive: true,
     status: 'SCHEDULED',
     availableSeats: { $gte: parseInt(passengers) },
-  }).sort({ departureTime: 1 });
+    departureTime: departureFilter, // ✅ applied once
+  };
 
-  // Attach pricing to each flight
+  const flights = await Flight.find(query).sort({ departureTime: 1 });
+
   const flightsWithPricing = flights.map(flight => {
     const pricing = calculatePrice(flight, [], parseInt(passengers));
     return {
@@ -62,7 +84,11 @@ const searchFlights = async (req, res) => {
     };
   });
 
-  res.json({ success: true, count: flights.length, flights: flightsWithPricing });
+  res.json({
+    success: true,
+    count: flights.length,
+    flights: flightsWithPricing,
+  });
 };
 
 // @desc    Get single flight

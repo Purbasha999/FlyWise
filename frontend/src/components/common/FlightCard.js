@@ -33,6 +33,9 @@ const FlightCard = ({ flight, onSelect, passengers = 1 }) => {
 
       <div className="fc-route">
         <div className="fc-time-block">
+          <div className="fc-date-pill">
+  {fmtDate(flight.departureTime)}
+</div>
           <div className="fc-time">{fmt(flight.departureTime)}</div>
           <div className="fc-city">{flight.source.code}</div>
           <div className="fc-city-name">{flight.source.city}</div>
@@ -51,6 +54,9 @@ const FlightCard = ({ flight, onSelect, passengers = 1 }) => {
         </div>
 
         <div className="fc-time-block right">
+          <div className="fc-date-pill">
+  {fmtDate(flight.departureTime)}
+</div>
           <div className="fc-time">{fmt(flight.arrivalTime)}</div>
           <div className="fc-city">{flight.destination.code}</div>
           <div className="fc-city-name">{flight.destination.city}</div>
