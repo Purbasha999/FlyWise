@@ -31,7 +31,6 @@ const fetchFlights = async () => {
   try {
     setLoading(true);
 
-    // 1️⃣ Try with date (if provided)
     let res = await searchFlights({ source, destination, date, passengers });
 
     if (date && res.data.flights.length === 0) {

@@ -53,14 +53,30 @@ useEffect(() => {
   }
 }, [selectedFlight]);
 
-if (!selectedFlight || !isAuthenticated || !searchParams) return null;
+const queryParams = new URLSearchParams(location.search);
 
-  const queryParams = new URLSearchParams(location.search);
 const passengers = Number(queryParams.get('passengers') || 1);
   const f = selectedFlight;
   const date=queryParams.get('date');
-  const src=queryParams.get('source');
-  const dest=queryParams.get('destination');
+  const source=queryParams.get('source');
+  const destination=queryParams.get('destination');
+
+
+  const [editData, setEditData] = useState({
+  date:'',
+  passengers:'1'
+});
+
+useEffect(() => {
+    setEditData({
+      date: date || '',
+      passengers: passengers || 1
+    });
+  }, [date, passengers]);
+
+
+
+  if (!selectedFlight || !isAuthenticated || !searchParams) return null;
 
 console.log("PASSENGERS:", passengers);
   const handleSeatsSelected = async (seatNums) => {
@@ -168,12 +184,7 @@ const runningTotal = pricing.totalPrice || 0;
 
 const someLoading = fetchingSeat !== null;
 
-const [editData, setEditData] = useState({
-  source,
-  destination,
-  date,
-  passengers
-});
+
 
 const handleUpdateSearch = () => {
   const { source, destination, date, passengers } = editData;
@@ -191,38 +202,6 @@ const handleUpdateSearch = () => {
   return (
     
     <div className="page-content seats-page">
-      <div className="top-search-bar">
-
-  <input
-    value={editData.source}
-    onChange={(e) => setEditData({ ...editData, source: e.target.value })}
-  />
-
-  <input
-    value={editData.destination}
-    onChange={(e) => setEditData({ ...editData, destination: e.target.value })}
-  />
-
-  <input
-    type="date"
-    value={editData.date || ''}
-    onChange={(e) => setEditData({ ...editData, date: e.target.value })}
-  />
-
-  <select
-    value={editData.passengers}
-    onChange={(e) => setEditData({ ...editData, passengers: Number(e.target.value) })}
-  >
-    {[1,2,3,4,5,6].map(n => (
-      <option key={n} value={n}>{n}</option>
-    ))}
-  </select>
-
-  <button onClick={handleUpdateSearch}>
-    Update
-  </button>
-
-</div>
       <div className="seats-header">
         <div className="section">
           <button className="btn btn-ghost btn-sm" onClick={() => navigate(-1)}>← Back to Results</button>
