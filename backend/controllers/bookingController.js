@@ -7,6 +7,7 @@ const { calculatePrice } = require('../middleware/pricing');
 // @route   POST /api/bookings
 const createBooking = async (req, res) => {
   const { flightId, seatNumbers, passengers , addOns=[]} = req.body;
+  console.log("SCHEMA CHECK:", Booking.schema.obj.addOns);
   const userId = req.user._id;
 
   if (!flightId || !seatNumbers?.length || !passengers?.length) {
@@ -32,7 +33,7 @@ const createBooking = async (req, res) => {
   }
 
   // Calculate final price
-  const pricing = calculatePrice(flight, seats, passengers.length);
+  const pricing = await calculatePrice(flight, seats, passengers.length);
 
 let safeAddOns = [];
 
@@ -87,7 +88,7 @@ const baggageTotal = cleanedAddOns
     seatNumber: seatNumbers[i] || seatNumbers[0],
   }));
 
-
+  console.log("FINAL ADDONS:", cleanedAddOns);
   const { totalPrice, discount = 0 } = req.body;
   const booking = await Booking.create({
     userId,
@@ -106,7 +107,7 @@ const baggageTotal = cleanedAddOns
       addOnTotal,
       originalPrice: pricing.totalPrice + addOnTotal,
       discount,
-      totalPrice: totalPrice,
+      totalPrice: totalPrice
     },
     bookingStatus: 'CONFIRMED',
     paymentStatus: 'PAID',

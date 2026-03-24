@@ -7,11 +7,13 @@ export const BookingProvider = ({ children }) => {
   const [selectedSeats, setSelectedSeats] = useState([]);
   const [passengers, setPassengers] = useState([]);
   const [searchParams, setSearchParams] = useState({ source: '', destination: '', date: '', passengers: 1 });
+  const [seatPricingMap, setSeatPricingMap] = useState({});
 
   const clearBooking = () => {
     setSelectedFlight(null);
     setSelectedSeats([]);
     setPassengers([]);
+    setSeatPricingMap({});
   };
 
   return (
@@ -20,6 +22,7 @@ export const BookingProvider = ({ children }) => {
       selectedSeats, setSelectedSeats,
       passengers, setPassengers,
       searchParams, setSearchParams,
+      seatPricingMap,  setSeatPricingMap,
       clearBooking,
     }}>
       {children}

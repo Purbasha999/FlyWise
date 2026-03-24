@@ -1,5 +1,7 @@
 const mongoose = require('mongoose');
-
+if (mongoose.models.Booking) {
+  delete mongoose.models.Booking;
+}
 const bookingSchema = new mongoose.Schema({
   bookingRef: {
     type: String,
@@ -28,14 +30,17 @@ const bookingSchema = new mongoose.Schema({
     gender: { type: String, enum: ['MALE', 'FEMALE', 'OTHER'] },
     seatNumber: String,
   }],
-  addOns: [
-  {
-    name: String,
-    price: Number,
-    type: String,
-    baggageWeight: Number,
-  }
-],
+  addOns: {
+  type: [
+    new mongoose.Schema({
+      name: { type: String },
+      price: { type: Number },
+      type: { type: String },
+      baggageWeight: { type: Number },
+    }, { _id: false })
+  ],
+  default: []
+},
   priceBreakdown: {
     basePrice: { type: Number, required: true },
     demandSurcharge: { type: Number, default: 0 },
@@ -74,5 +79,4 @@ bookingSchema.pre('validate', function (next) {
   }
   next();
 });
-
 module.exports = mongoose.model('Booking', bookingSchema);

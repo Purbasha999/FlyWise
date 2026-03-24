@@ -1,9 +1,10 @@
-import React, { useState,useEffect } from 'react';
+import React, { useState,useEffect,useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useBooking } from '../context/BookingContext';
 import { useAuth } from '../context/AuthContext';
 import SeatMap from '../components/common/SeatMap';
 import { getFlightPrice,lockSeats } from '../utils/api';
+import { useLocation } from 'react-router-dom';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
 import './SeatSelection.css';
@@ -12,45 +13,109 @@ const fmt = (d) => format(new Date(d), 'HH:mm');
 const fmtDur = (m) => `${Math.floor(m/60)}h ${m%60}m`;
 
 const SeatSelection = () => {
+  const location = useLocation();
   const navigate = useNavigate();
-  const { selectedFlight, searchParams, setSelectedSeats } = useBooking();
+  const { selectedFlight, setSelectedFlight, searchParams, setSearchParams, setSelectedSeats } = useBooking();
   const { user, isAuthenticated } = useAuth();
   const [selectedSeatNums, setSelectedSeatNums] = useState([]);
   const [lockExpiry, setLockExpiry] = useState(null);
-  const [pricing, setPricing] = useState(null);
+  const [seatPricing, setSeatPricing] = useState({});
   const [loadingPrice, setLoadingPrice] = useState(false);
+  const [fetchingSeat, setFetchingSeat] = useState(null);
+
+  const seatPricingRef = useRef({});
 
   useEffect(() => {
+  if (selectedFlight) {
+    localStorage.setItem('selectedFlight', JSON.stringify(selectedFlight));
+  }
+}, [selectedFlight]);
+
+useEffect(() => {
+  if (!searchParams || !searchParams.passengers) {
+    const saved = localStorage.getItem('searchParams');
+    if (saved) {
+      setSearchParams(JSON.parse(saved));
+    }
+  }
+}, []);
+
+  useEffect(() => {
+  const saved = localStorage.getItem('selectedFlight');
+
+  if (!selectedFlight && saved) {
+    setSelectedFlight(JSON.parse(saved));
+    return;
+  }
+
   if (!selectedFlight) {
     navigate('/');
-  } else if (!isAuthenticated) {
-    navigate('/login?redirect=/seats');
   }
-}, [selectedFlight, isAuthenticated, navigate]);
+}, [selectedFlight]);
 
-if (!selectedFlight || !isAuthenticated) return null;
+if (!selectedFlight || !isAuthenticated || !searchParams) return null;
 
-  const passengers = searchParams.passengers || 1;
+  const queryParams = new URLSearchParams(location.search);
+const passengers = Number(queryParams.get('passengers') || 1);
+  const f = selectedFlight;
+  const date=queryParams.get('date');
+  const src=queryParams.get('source');
+  const dest=queryParams.get('destination');
 
+console.log("PASSENGERS:", passengers);
   const handleSeatsSelected = async (seatNums) => {
+    const prev    = selectedSeatNums;
+    const added   = seatNums.filter(s => !prev.includes(s));
+    const removed = prev.filter(s => !seatNums.includes(s));
+
   setSelectedSeatNums(seatNums);
 
-  if (seatNums.length > 0) {
-    try {
-      setLoadingPrice(true);
-      const res = await getFlightPrice(selectedFlight._id, {
-        seatNumbers: seatNums,
-        passengers
-      });
-      setPricing(res.data.pricing);
-    } catch {
-      toast.error('Failed to calculate price');
-    } finally {
-      setLoadingPrice(false);
+  if (removed.length > 0) {
+      const updated = { ...seatPricingRef.current };
+      removed.forEach(s => delete updated[s]);
+      seatPricingRef.current = updated;
+      setSeatPricing({ ...updated });
     }
-  } else {
-    setPricing(null);
+
+  // if (seatNums.length > 0) {
+  //   try {
+  //     setLoadingPrice(true);
+  //     const res = await getFlightPrice(selectedFlight._id, {
+  //       seatNumbers: seatNums,
+  //       passengers
+  //     });
+  //     setPricing(res.data.pricing);
+  //   } catch {
+  //     toast.error('Failed to calculate price');
+  //   } finally {
+  //     setLoadingPrice(false);
+  //   }
+  // } else {
+  //   setPricing(null);
+  // }
+  if (seatNums.length > 0) {
+  try {
+    setLoadingPrice(true);
+
+    const res = await getFlightPrice(f._id, {
+      seatNumbers: seatNums,
+      passengers: passengers,
+    });
+
+    const p = res.data.pricing;
+    console.log("price fetch or not? ",res.data);
+    setSeatPricing({
+      combined: p   // store full pricing
+    });
+
+  } catch {
+    toast.error('Failed to calculate price');
+  } finally {
+    setLoadingPrice(false);
   }
+} else {
+  setSeatPricing({});
+}
 };
 
   const handleContinue = async () => {
@@ -60,32 +125,111 @@ if (!selectedFlight || !isAuthenticated) return null;
   }
 
   try {
-  
+    const priceRes = await getFlightPrice(f._id, {
+      seatNumbers: selectedSeatNums,
+      passengers: passengers,
+    });
+
+    const latestPricing = priceRes.data.pricing;
+
     const res = await lockSeats({
       flightId: selectedFlight._id,
       seatNumbers: selectedSeatNums
     });
+
     setLockExpiry(res.data.lockExpiry); 
     setSelectedSeats(selectedSeatNums);
+
     navigate('/booking-summary',{
-      state: { lockExpiry: res.data.lockExpiry }
+      state: { 
+        lockExpiry: res.data.lockExpiry,
+        pricing: latestPricing
+      }
     });
 
   } catch (err) {
-  toast.error(err.response?.data?.message || 'Seats not available anymore');
-  setSelectedSeatNums([]); 
-}
+    toast.error(err.response?.data?.message || 'Seats not available anymore');
+    setSelectedSeatNums([]); 
+  }
+};
+const pricing = seatPricing.combined || {};
+
+const runningBase = pricing.basePrice || 0;
+const runningTax = pricing.taxes || 0;
+const runningTotal = pricing.totalPrice || 0;
+
+  // Merge surcharges by name across all selected seats
+  const surchargeEntries = (pricing.appliedRules || []).map(rule => [
+  rule.name,
+  rule.charge
+]);
+
+//edit query, top bar
+
+const someLoading = fetchingSeat !== null;
+
+const [editData, setEditData] = useState({
+  source,
+  destination,
+  date,
+  passengers
+});
+
+const handleUpdateSearch = () => {
+  const { source, destination, date, passengers } = editData;
+
+  let url = `/flights?source=${encodeURIComponent(source)}&destination=${encodeURIComponent(destination)}&passengers=${passengers}`;
+
+  if (date) {
+    url += `&date=${date}`;
+  }
+
+  navigate(url); 
 };
 
-  const f = selectedFlight;
-
+  
   return (
+    
     <div className="page-content seats-page">
+      <div className="top-search-bar">
+
+  <input
+    value={editData.source}
+    onChange={(e) => setEditData({ ...editData, source: e.target.value })}
+  />
+
+  <input
+    value={editData.destination}
+    onChange={(e) => setEditData({ ...editData, destination: e.target.value })}
+  />
+
+  <input
+    type="date"
+    value={editData.date || ''}
+    onChange={(e) => setEditData({ ...editData, date: e.target.value })}
+  />
+
+  <select
+    value={editData.passengers}
+    onChange={(e) => setEditData({ ...editData, passengers: Number(e.target.value) })}
+  >
+    {[1,2,3,4,5,6].map(n => (
+      <option key={n} value={n}>{n}</option>
+    ))}
+  </select>
+
+  <button onClick={handleUpdateSearch}>
+    Update
+  </button>
+
+</div>
       <div className="seats-header">
         <div className="section">
           <button className="btn btn-ghost btn-sm" onClick={() => navigate(-1)}>← Back to Results</button>
           <h1 className="seats-title">Select Your Seats</h1>
-          <p className="seats-meta">Select {passengers} seat{passengers > 1 ? 's' : ''} for your journey</p>
+          <p className="seats-meta">
+            Select {passengers} seat{passengers > 1 ? 's' : ''} for your journey
+          </p>
         </div>
       </div>
 
@@ -98,6 +242,7 @@ if (!selectedFlight || !isAuthenticated) return null;
               <span className="badge badge-blue">{f.flightNumber}</span>
             </div>
             <SeatMap
+              key={passengers}
               flightId={f._id}
               maxSeats={passengers}
               onSeatsSelected={handleSeatsSelected}
@@ -142,27 +287,54 @@ if (!selectedFlight || !isAuthenticated) return null;
             </div>
           )}
 
-          {/* Price breakdown */}
-          {loadingPrice && <div className="card price-loading"><div className="spinner" /><span>Calculating price...</span></div>}
-          {pricing && (
-            <div className="card price-card">
-              <h3 className="price-card-title">Price Breakdown</h3>
+          {/* ── Live price panel ── */}
+          <div className="card price-card">
+            <h3 className="price-card-title">
+              Price Breakdown
+              {someLoading && <span className="price-fetching-badge">Updating…</span>}
+            </h3>
+
+            {selectedSeatNums.length === 0 ? (
+              <p className="price-hint">Select a seat to see pricing</p>
+            ) : (
               <div className="price-rows">
-                <div className="price-row"><span>Base fare ({passengers} pax)</span><span>₹{pricing.basePrice?.toLocaleString('en-IN')}</span></div>
-                {pricing.demandSurcharge > 0 && <div className="price-row surcharge"><span>High demand surcharge</span><span>+₹{pricing.demandSurcharge?.toLocaleString('en-IN')}</span></div>}
-                {pricing.lastMinuteSurcharge > 0 && <div className="price-row surcharge"><span>Last-minute surcharge</span><span>+₹{pricing.lastMinuteSurcharge?.toLocaleString('en-IN')}</span></div>}
-                {pricing.seatCharges > 0 && <div className="price-row"><span>Seat charges</span><span>+₹{pricing.seatCharges?.toLocaleString('en-IN')}</span></div>}
-                <div className="price-row"><span>Taxes & GST (18%)</span><span>₹{pricing.taxes?.toLocaleString('en-IN')}</span></div>
+                <div className="price-row">
+                  <span>Base fare ({selectedSeatNums.length}/{passengers} seat{passengers > 1 ? 's' : ''})</span>
+                  <span>₹{runningBase.toLocaleString('en-IN')}</span>
+                </div>
+
+                {surchargeEntries.length > 0
+                  ? surchargeEntries.map(([name, total]) => (
+                      <div className="price-row surcharge" key={name}>
+                        <span>{name}</span>
+                        <span>+₹{total.toLocaleString('en-IN')}</span>
+                      </div>
+                    ))
+                  : (pricing.appliedRules || []).length > 0 && (
+                      <div className="price-row">
+                        <span style={{ color: '#94a3b8' }}>No surcharges apply</span>
+                      </div>
+                    )
+                }
+
+                <div className="price-row">
+                  <span>Taxes &amp; GST (18%)</span>
+                  <span>₹{runningTax.toLocaleString('en-IN')}</span>
+                </div>
+
                 <hr className="divider" />
-                <div className="price-row total"><span>Total</span><span>₹{pricing.totalPrice?.toLocaleString('en-IN')}</span></div>
+                <div className="price-row total">
+                  <span>Total {selectedSeatNums.length < passengers ? `(so far)` : ''}</span>
+                  <span>₹{runningTotal.toLocaleString('en-IN')}</span>
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
 
           <button
             className="btn btn-primary btn-lg btn-full"
             onClick={handleContinue}
-            disabled={selectedSeatNums.length < passengers}
+            disabled={selectedSeatNums.length < passengers || someLoading}
           >
             Continue to Booking →
           </button>

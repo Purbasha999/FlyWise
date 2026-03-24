@@ -41,10 +41,26 @@ const flightSchema = new mongoose.Schema({
     required: true,
     min: 0,
   },
-  totalSeats: {
+  rows: {
     type: Number,
     required: true,
-    default: 60,
+    default: 10,
+    min: 2,
+  },
+  columns: {
+    type: Number,
+    required: true,
+    default: 6,
+    min: 2,
+    max: 10,
+  },
+  businessRows: {
+    type: Number,
+    required: true,
+    default: 3, // first N rows are business class
+  },
+  totalSeats: {
+    type: Number,
   },
   availableSeats: {
     type: Number,
@@ -64,6 +80,14 @@ const flightSchema = new mongoose.Schema({
     default: true,
   },
 }, { timestamps: true });
+
+flightSchema.pre('save', function (next) {
+  this.totalSeats = this.rows * this.columns;
+  if (this.availableSeats == null) {
+    this.availableSeats = this.totalSeats;
+  }
+  next();
+});
 
 // Virtual for occupancy percentage
 flightSchema.virtual('occupancyPercent').get(function () {

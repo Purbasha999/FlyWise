@@ -25,6 +25,8 @@ app.use('/api/seats', require('./routes/seats'));
 app.use('/api/bookings', require('./routes/bookings'));
 app.use('/api/addons', require('./routes/addons'));
 app.use('/api/promo', require('./routes/promo'));
+app.use('/api/pricing-rules', require('./routes/pricingRules'));
+
 // Health check
 app.get('/api/health', (req, res) => res.json({ status: 'OK', message: 'FlyWise API running' }));
 

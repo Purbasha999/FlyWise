@@ -217,7 +217,13 @@ const downloadTicket = async () => {
 
   {/* HEADER */}
   <div className="ticket-header">
-    <div className="ticket-title">✈ FlyWise Boarding Pass</div>
+    <div>
+      <div className="ticket-title">✈ FlyWise Boarding Pass</div>
+       <div className="ticket-date"> Journey Date : <span>{fmtDate(f.departureTime)}</span> 
+     
+    </div>
+    </div>
+    
     <div className="ticket-ref">
       <div>Booking Ref</div>
       <strong>{booking.bookingRef}</strong>

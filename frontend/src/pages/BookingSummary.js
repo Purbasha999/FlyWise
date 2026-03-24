@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useBooking } from '../context/BookingContext';
+import { useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import AddOnsSection from './AddOnsSection';
 import { createBooking, getFlightPrice } from '../utils/api';
@@ -8,12 +9,15 @@ import { format } from 'date-fns';
 import toast from 'react-hot-toast';
 import './BookingSummary.css';
 
+
 const fmt = (d) => format(new Date(d), 'HH:mm');
 const fmtDate = (d) => format(new Date(d), 'dd MMM yyyy');
 const fmtDur = (m) => `${Math.floor(m/60)}h ${m%60}m`;
 
 const BookingSummary = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const pb = location.state?.pricing || {};
   const { selectedFlight, selectedSeats, searchParams, setPassengers, clearBooking } = useBooking();
   const { user } = useAuth();
   const passengers = searchParams.passengers || 1;
@@ -38,7 +42,6 @@ const BookingSummary = () => {
   }
 
   const f = selectedFlight;
-  const pb = f.priceBreakdown || {};
 
   const addOnTotal = selectedAddOns.reduce((sum, item) => sum + item.price, 0);
 
@@ -68,7 +71,7 @@ const baggageTotal = selectedAddOns
         seatNumbers: selectedSeats,
         passengers: passengerForms,
         addOns: selectedAddOns,
-        totalPrice: pb.totalPrice + addOnTotal
+        totalPrice: (pb.totalPrice||0) + addOnTotal
       }
     }
   });
@@ -188,11 +191,11 @@ const baggageTotal = selectedAddOns
           <div className="card summary-card">
             <h3 className="sc-title">Price Breakdown</h3>
             <div className="price-rows">
-              <div className="price-row"><span>Base fare ({passengers} pax)</span><span>₹{pb.basePrice?.toLocaleString('en-IN') || f.basePrice * passengers}</span></div>
+              <div className="price-row"><span>Base fare ({passengers} pax)</span><span>₹{(pb.basePrice || f.basePrice * passengers).toLocaleString('en-IN') || f.basePrice * passengers}</span></div>
               {pb.demandSurcharge > 0 && <div className="price-row surcharge"><span>High demand</span><span>+₹{pb.demandSurcharge?.toLocaleString('en-IN')}</span></div>}
               {pb.lastMinuteSurcharge > 0 && <div className="price-row surcharge"><span>Last-minute</span><span>+₹{pb.lastMinuteSurcharge?.toLocaleString('en-IN')}</span></div>}
               {pb.seatCharges > 0 && <div className="price-row"><span>Seat charges</span><span>+₹{pb.seatCharges?.toLocaleString('en-IN')}</span></div>}
-              <div className="price-row"><span>Taxes & GST (18%)</span><span>₹{pb.taxes?.toLocaleString('en-IN')}</span></div>
+              <div className="price-row"><span>Taxes & GST (18%)</span><span>₹{(pb.taxes||0)?.toLocaleString('en-IN')}</span></div>
               {mealTotal > 0 && (
                 <div className="price-row">
                 <span>Meals</span>
@@ -207,12 +210,12 @@ const baggageTotal = selectedAddOns
   </div>
 )}
               <hr className="divider" />
-              <div className="price-row total"><span>Total Amount</span><span>₹{(pb.totalPrice+addOnTotal).toLocaleString('en-IN')}</span></div>
+              <div className="price-row total"><span>Total Amount</span><span>₹{((pb.totalPrice||0)+addOnTotal).toLocaleString('en-IN')}</span></div>
             </div>
           </div>
 
           <button className="btn btn-primary btn-lg btn-full" onClick={handleConfirm} disabled={booking}>
-            {booking ? <><div className="spinner" /> Confirming...</> : '✓ Confirm & Pay ₹' + ((pb.totalPrice+addOnTotal).toLocaleString('en-IN') || '')}
+            {booking ? <><div className="spinner" /> Confirming...</> : '✓ Confirm & Pay ₹' + (((pb.totalPrice||0)+addOnTotal).toLocaleString('en-IN') || '')}
           </button>
           <p className="summary-tnc">By confirming, you agree to our Terms & Conditions. Fare includes all taxes.</p>
         </div>

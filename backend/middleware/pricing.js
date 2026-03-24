@@ -1,67 +1,141 @@
-/**
- * FlyWise Dynamic Pricing Engine
- * Rules:
- * - Base price from flight
- * - +1000 if >70% seats booked
- * - +1500 if booking within 2 days of departure
- * - +300 per window seat
- * - 18% GST on total
- */
+const Seat = require('../models/Seat');
+const PricingRule = require('../models/PricingRule');
 
-const calculatePrice = (flight, seats, passengerCount = 1) => {
+/**
+ * Calculate dynamic price for one or more seats on a flight
+ * @param {Object} flight         - Flight document
+ * @param {Array}  seats          - Array of Seat documents
+ * @param {Number} passengerCount - Number of passengers (defaults to seats.length)
+ * @returns {Object} priceBreakdown
+ */
+const calculatePrice = async (flight, seats, passengerCount) => {
+  // Accept a single seat object for backwards-compat; normalise to array
+  const seatsArr = Array.isArray(seats) ? seats : [seats];
+  const numPassengers = passengerCount || seatsArr.length;
+
+  const basePrice = flight.basePrice * numPassengers;
+  let demandSurcharge = 0;
+  let lastMinuteSurcharge = 0;
+  let seatCharges = 0;
+  const appliedRules = [];
+
+  // Fetch active pricing rules from DB
+  const rules = await PricingRule.find({ isActive: true });
+
+  // Calculate seat occupancy
+  const totalSeats = await Seat.countDocuments({ flightId: flight._id });
+  const bookedSeats = await Seat.countDocuments({
+    flightId: flight._id,
+    status: { $in: ['CONFIRMED', 'LOCKED'] },
+  });
+  const occupancyPercent = totalSeats > 0 ? (bookedSeats / totalSeats) * 100 : 0;
+
+  // Hours before departure
   const now = new Date();
   const departure = new Date(flight.departureTime);
-  const daysUntilDeparture = (departure - now) / (1000 * 60 * 60 * 24);
-  const occupancyPercent = ((flight.totalSeats - flight.availableSeats) / flight.totalSeats) * 100;
+  const hoursUntilDeparture = (departure - now) / (1000 * 60 * 60);
 
-  let basePrice = flight.basePrice;
+  // Flags so flight-level rules only fire once
+  let demandRuleApplied = false;
+  let timeRuleApplied = false;
 
-  // Demand surcharge: >70% seats booked
-  let demandSurcharge = 0;
-  if (occupancyPercent > 70) {
-    demandSurcharge = 1000;
+  for (const rule of rules) {
+    if (!rule.isActive) continue;
+
+    switch (rule.type) {
+      // ── Flight-level surcharges (applied once, not per-seat) ──────────────
+      case 'DEMAND':
+        if (
+          !demandRuleApplied &&
+          rule.condition.threshold != null &&
+          occupancyPercent >= rule.condition.threshold
+        ) {
+          demandSurcharge += rule.charge;
+          demandRuleApplied = true;
+          appliedRules.push({ name: rule.name, type: rule.type, charge: rule.charge });
+        }
+        break;
+
+      case 'TIME':
+        if (
+          !timeRuleApplied &&
+          rule.condition.hoursBeforeDeparture != null &&
+          hoursUntilDeparture <= rule.condition.hoursBeforeDeparture
+        ) {
+          lastMinuteSurcharge += rule.charge;
+          timeRuleApplied = true;
+          appliedRules.push({ name: rule.name, type: rule.type, charge: rule.charge });
+        }
+        break;
+
+      // ── Per-seat surcharges ───────────────────────────────────────────────
+      case 'SEAT_TYPE':
+        for (const seat of seatsArr) {
+          if (rule.condition.seatType && seat.seatType === rule.condition.seatType) {
+            seatCharges += rule.charge;
+            appliedRules.push({
+              name: `${rule.name} (${seat.seatNumber})`,
+              type: rule.type,
+              charge: rule.charge,
+            });
+          }
+        }
+        break;
+
+      case 'CLASS':
+        for (const seat of seatsArr) {
+          if (rule.condition.class && seat.class === rule.condition.class) {
+            seatCharges += rule.charge;
+            appliedRules.push({
+              name: `${rule.name} (${seat.seatNumber})`,
+              type: rule.type,
+              charge: rule.charge,
+            });
+          }
+        }
+        break;
+
+      default:
+        break;
+    }
   }
 
-  // Last-minute surcharge: within 2 days
-  let lastMinuteSurcharge = 0;
-  if (daysUntilDeparture <= 2) {
-    lastMinuteSurcharge = 1500;
-  }
-
-  // Seat type charges
-  let seatCharges = 0;
-  if (seats && seats.length > 0) {
-    seats.forEach(seat => {
+  // Fallback defaults when no rules exist in DB yet
+  if (rules.length === 0) {
+    if (occupancyPercent >= 70) {
+      demandSurcharge = 1000;
+      appliedRules.push({ name: 'High Demand Surcharge', type: 'DEMAND', charge: 1000 });
+    }
+    if (hoursUntilDeparture <= 48) {
+      lastMinuteSurcharge = 1500;
+      appliedRules.push({ name: 'Last-Minute Surcharge', type: 'TIME', charge: 1500 });
+    }
+    for (const seat of seatsArr) {
       if (seat.seatType === 'WINDOW') {
         seatCharges += 300;
+        appliedRules.push({ name: `Window Seat (${seat.seatNumber})`, type: 'SEAT_TYPE', charge: 300 });
       } else if (seat.seatType === 'AISLE') {
         seatCharges += 150;
+        appliedRules.push({ name: `Aisle Seat (${seat.seatNumber})`, type: 'SEAT_TYPE', charge: 150 });
       }
-    });
+    }
   }
 
-  const pricePerPassenger = basePrice + demandSurcharge + lastMinuteSurcharge;
-  const subtotal = (pricePerPassenger * passengerCount) + seatCharges;
-  const taxes = Math.round(subtotal * 0.18); // 18% GST
+  const subtotal = basePrice + demandSurcharge + lastMinuteSurcharge + seatCharges;
+  const taxes = Math.round(subtotal * 0.18);
   const totalPrice = subtotal + taxes;
 
   return {
-    basePrice: basePrice * passengerCount,
-    demandSurcharge: demandSurcharge * passengerCount,
-    lastMinuteSurcharge: lastMinuteSurcharge * passengerCount,
+    basePrice,
+    demandSurcharge,
+    lastMinuteSurcharge,
     seatCharges,
     taxes,
     totalPrice,
-    pricePerPassenger: pricePerPassenger + (seatCharges / passengerCount),
+    appliedRules,
     occupancyPercent: Math.round(occupancyPercent),
-    daysUntilDeparture: Math.round(daysUntilDeparture),
+    hoursUntilDeparture: Math.round(hoursUntilDeparture),
   };
 };
 
-const formatDuration = (minutes) => {
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
-  return `${h}h ${m}m`;
-};
-
-module.exports = { calculatePrice, formatDuration };
+module.exports = { calculatePrice };

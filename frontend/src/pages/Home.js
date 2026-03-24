@@ -45,6 +45,7 @@ const Home = () => {
     e.preventDefault();
     if (!form.source || !form.destination) return;
     setSearchParams(form);
+localStorage.setItem('searchParams', JSON.stringify(form));
     let url = `/flights?source=${encodeURIComponent(form.source)}&destination=${encodeURIComponent(form.destination)}&passengers=${form.passengers}`;
     
     if (form.date) {
@@ -141,7 +142,7 @@ const Home = () => {
                   <button
   className="deal-btn"
   onClick={() => {
-    const url = `/flights?source=${encodeURIComponent(deal.from)}&destination=${encodeURIComponent(deal.to)}&passengers=1`;
+    const url = `/flights?source=${encodeURIComponent(deal.from)}&destination=${encodeURIComponent(deal.to)}&passengers=${passengers}`;
     navigate(url);
   }}
 >

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createBooking } from '../utils/api';
 import axios from 'axios';
 import { useLocation, useNavigate } from 'react-router-dom';
 import './PaymentPage.css';
@@ -9,7 +10,6 @@ const PaymentPage = () => {
 
   const bookingData = location.state?.bookingData;
 
-  // ❗ guard
   if (!bookingData) {
     return (
       <div style={{ padding: "40px", textAlign: "center" }}>
@@ -19,7 +19,6 @@ const PaymentPage = () => {
     );
   }
 
-  // ✅ ALL HOOKS INSIDE COMPONENT
   const [upiId, setUpiId] = useState('');
   const [upiVerified, setUpiVerified] = useState(false);
   const [showUpiPin, setShowUpiPin] = useState(false);
@@ -43,7 +42,6 @@ const PaymentPage = () => {
   const [finalPrice, setFinalPrice] = useState(bookingData.totalPrice);
   const [method, setMethod] = useState('UPI');
 
-  // ✅ PROMO
   const applyPromo = async () => {
     try {
       const res = await axios.post('/api/promo/apply', {
@@ -59,7 +57,6 @@ const PaymentPage = () => {
     }
   };
 
-  // ✅ UPI VERIFY (FIXED BUG)
   const handleUpiVerify = () => {
     if (!upiId.includes('@')) {
       alert('Invalid UPI ID');
@@ -68,42 +65,45 @@ const PaymentPage = () => {
     setUpiVerified(true);
   };
 
-  // ✅ PAYMENT
-  const handlePayment = () => {
-    if (method === 'UPI') {
-      if (!upiVerified) {
-        alert('Please verify UPI');
-        return;
-      }
+  const handlePayment = async () => {
+  // validations
+  if (method === 'UPI') {
+    if (!upiVerified) return alert('Verify UPI');
+    if (!showUpiPin) return setShowUpiPin(true);
+    if (upiPin.length !== 4) return alert('Invalid PIN');
+  }
 
-      if (!showUpiPin) {
-        setShowUpiPin(true);
-        return;
-      }
-
-      if (upiPin.length !== 4) {
-        alert('Enter valid 4-digit PIN');
-        return;
-      }
+  if (method === 'Card') {
+    if (!card.number || !card.cvv || !card.expiry) {
+      return alert('Fill card details');
     }
+  }
 
-    if (method === 'Card') {
-      if (!card.number || !card.cvv || !card.expiry) {
-        alert('Fill card details');
-        return;
-      }
+  if (method === 'NetBanking') {
+    if (!selectedBank || !bankLogin.userId || !bankLogin.password) {
+      return alert('Complete bank login');
     }
+  }
 
-    if (method === 'NetBanking') {
-      if (!selectedBank || !bankLogin.userId || !bankLogin.password) {
-        alert('Complete bank login');
-        return;
-      }
-    }
+  try {
+    const res = await createBooking({
+      flightId: bookingData.flight._id,
+      seatNumbers: bookingData.seatNumbers,
+      passengers: bookingData.passengers,
+      addOns: bookingData.addOns,
+      totalPrice: finalPrice,
+      discount
+    });
 
-    alert(`Paid ₹${finalPrice} via ${method}`);
+    alert(`Payment successful! 🎉`);
+
     navigate('/dashboard');
-  };
+
+  }catch (err) {
+  console.log("BOOKING ERROR:", err.response?.data || err);
+  alert(err.response?.data?.message || 'Booking failed');
+}
+};
 
   return (
     <div className="payment-container">
