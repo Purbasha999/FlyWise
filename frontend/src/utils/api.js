@@ -55,5 +55,11 @@ export const getStats = () => API.get('/bookings/stats');
 export const getAddOns = (params) => API.get('/addons', { params });
 export const applyPromoCode = (data) => API.post('/promo/apply', data);
 
+// Pricing Rules
+export const getPricingRules = () => API.get('/pricing-rules');
+export const createPricingRule = (data) => API.post('/pricing-rules', data);
+export const updatePricingRule = (id, data) => API.put(`/pricing-rules/${id}`, data);
+export const deletePricingRule = (id) => API.delete(`/pricing-rules/${id}`);
+
 
 export default API;
