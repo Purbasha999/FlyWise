@@ -63,16 +63,26 @@ const searchFlights = async (req, res) => {
   let departureFilter;
 
   if (date) {
-    const searchDate = new Date(date);
-    const nextDay = new Date(searchDate);
-    nextDay.setDate(nextDay.getDate() + 1);
+    const start = new Date(date);
+start.setHours(0, 0, 0, 0);
 
-    departureFilter = {
-      $gte: new Date(Math.max(searchDate, minTime)), 
-      $lt: nextDay,
-    };
+const end = new Date(date);
+end.setHours(23, 59, 59, 999);
+
+// apply 10-hour rule only if today
+if (start.toDateString() === new Date().toDateString()) {
+  departureFilter = {
+    $gte: new Date(Math.max(start, minTime)),
+    $lte: end,
+  };
+} else {
+  departureFilter = {
+    $gte: start,
+    $lte: end,
+  };
+}
   } else {
-    // no date → future flights only
+    // no date-> future flights only
     departureFilter = {
       $gte: minTime,
     };

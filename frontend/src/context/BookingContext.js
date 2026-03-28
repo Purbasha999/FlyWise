@@ -8,22 +8,27 @@ export const BookingProvider = ({ children }) => {
   const [passengers, setPassengers] = useState([]);
   const [searchParams, setSearchParams] = useState({ source: '', destination: '', date: '', passengers: 1 });
   const [seatPricingMap, setSeatPricingMap] = useState({});
-
+const [selectedOutboundFlight, setSelectedOutboundFlight] = useState(null);
+const [selectedReturnFlight, setSelectedReturnFlight] = useState(null);
   const clearBooking = () => {
     setSelectedFlight(null);
     setSelectedSeats([]);
     setPassengers([]);
     setSeatPricingMap({});
+    setSelectedOutboundFlight(null);
+    setSelectedReturnFlight(null);
   };
 
   return (
     <BookingContext.Provider value={{
       selectedFlight, setSelectedFlight,
       selectedSeats, setSelectedSeats,
+      selectedOutboundFlight, setSelectedOutboundFlight,
+      selectedReturnFlight,
       passengers, setPassengers,
       searchParams, setSearchParams,
       seatPricingMap,  setSeatPricingMap,
-      clearBooking,
+      clearBooking, setSelectedReturnFlight
     }}>
       {children}
     </BookingContext.Provider>
