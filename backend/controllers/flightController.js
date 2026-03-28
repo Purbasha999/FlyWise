@@ -31,9 +31,17 @@ const createSeatsForFlight = async (flight) => {
         status: 'AVAILABLE',
       });
     }
+    console.log("rows:", rows, "columns:", columns);
+console.log("colLabels:", colLabels);
+console.log("seats length:", seats.length);
   }
 
+  try {
   await Seat.insertMany(seats);
+  console.log("Seats inserted:", seats.length);
+} catch (err) {
+  console.error("Seat insert error:", err);
+}
 };
 
 // @desc    Search flights
@@ -49,7 +57,7 @@ const searchFlights = async (req, res) => {
     });
   }
 
-  // ⛔ 10-hour rule
+  // 10-hour rule
   const minTime = new Date(now.getTime() + 10 * 60 * 60 * 1000);
 
   let departureFilter;
@@ -140,25 +148,26 @@ const createFlight = async (req, res) => {
     arrivalTime: arr,
     duration,
     basePrice,
-    rows: rows || 10,
-    columns: columns || 6,
-    businessRows: businessRows || 3,
+    rows: Number(rows) || 10,
+    columns: Number(columns) || 6,
+    businessRows: Number(businessRows) || 3,
     totalSeats: totalSeats || 60,
     availableSeats: totalSeats || 60,
     aircraft,
   });
 
-  await createSeatsForFlight(flight._id);
+  await createSeatsForFlight(flight);
 
   res.status(201).json({ success: true, message: 'Flight created successfully.', flight });
+
+  
 };
+
 
 // @desc    Update flight (admin)
 // @route   PUT /api/flights/:id
 const updateFlight = async (req, res) => {
   const flight = await Flight.findByIdAndUpdate(req.params.id, req.body, { new: true });
-  if (!flight) return res.status(404).json({ success: false, message: 'Flight not found.' });
-  res.json({ success: true, flight });
   const oldRows = flight.rows;
   const oldColumns = flight.columns;
   const oldBusinessRows = flight.businessRows;
@@ -188,6 +197,8 @@ const updateFlight = async (req, res) => {
   }
 
   await flight.save();
+  if (!flight) return res.status(404).json({ success: false, message: 'Flight not found.' });
+  res.json({ success: true, flight });
   res.json({ success: true, flight });
 };
 

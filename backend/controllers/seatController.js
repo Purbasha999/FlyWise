@@ -20,7 +20,7 @@ const getSeats = async (req, res) => {
 
   const seats = await Seat.find({ flightId }).sort({ row: 1, column: 1 });
   if (!seats.length) {
-    return res.status(404).json({ success: false, message: 'No seats found for this flight.' });
+    return res.json({ success: true, seats: seats || [] }); ;
   }
 
   res.json({ success: true, seats });

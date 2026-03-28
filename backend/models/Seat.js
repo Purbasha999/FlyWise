@@ -17,7 +17,7 @@ const seatSchema = new mongoose.Schema({
   column: {
     type: String,
     required: true,
-    enum: ['A', 'B', 'C', 'D', 'E', 'F'],
+    enum: ['A', 'B', 'C', 'D', 'E', 'F','G'],
   },
   seatType: {
     type: String,
