@@ -63,30 +63,21 @@ const searchFlights = async (req, res) => {
   let departureFilter;
 
   if (date) {
-    const start = new Date(date);
-start.setHours(0, 0, 0, 0);
+  const start = new Date(date);
+  start.setHours(0, 0, 0, 0);
 
-const end = new Date(date);
-end.setHours(23, 59, 59, 999);
+  const end = new Date(date);
+  end.setHours(23, 59, 59, 999);
 
-// apply 10-hour rule only if today
-if (start.toDateString() === new Date().toDateString()) {
-  departureFilter = {
-    $gte: new Date(Math.max(start, minTime)),
-    $lte: end,
-  };
-} else {
   departureFilter = {
     $gte: start,
     $lte: end,
   };
+} else {
+  departureFilter = {
+    $gte: new Date() // only future flights
+  };
 }
-  } else {
-    // no date-> future flights only
-    departureFilter = {
-      $gte: minTime,
-    };
-  }
 
   const query = {
     'source.city': { $regex: source, $options: 'i' },

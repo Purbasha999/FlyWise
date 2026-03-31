@@ -35,12 +35,16 @@ export default function AddOnsSection({selected,setSelected}) {
 };
 
   const toggleAdd = (item) => {
-    setSelected((prev) =>
-      prev.find((i) => i._id === item._id)
-        ? prev.filter((i) => i._id !== item._id)
-        : [...prev, item]
-    );
-  };
+  const safe = Array.isArray(selected) ? selected : [];
+
+  const exists = safe.find(i => i._id === item._id);
+
+  const updated = exists
+    ? safe.filter(i => i._id !== item._id)
+    : [...safe, item];
+
+  setSelected(updated);
+};
 
   return (
     <div className="addons-container card">
@@ -90,7 +94,8 @@ export default function AddOnsSection({selected,setSelected}) {
       {/* Cards */}
       <div className="addons-list">
   {addons.map((item) => {
-    const isSelected = selected.find(i => i._id === item._id);
+    const safeSelected = Array.isArray(selected) ? selected : [];
+const isSelected = safeSelected.find(i => i._id === item._id);
 
     return (
       <div key={item._id} className={`addon-row ${isSelected ? "selected" : ""}`}>

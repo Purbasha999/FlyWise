@@ -24,6 +24,10 @@ const bookingSchema = new mongoose.Schema({
     seatType: String,
     seatCharge: Number,
   }],
+  groupId: {
+  type: String,
+  index: true
+},
   passengers: [{
     name: { type: String, required: true },
     age: { type: Number, required: true },

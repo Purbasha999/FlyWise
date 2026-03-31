@@ -12,6 +12,8 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Flights from './pages/Flights';
 import SeatSelection from './pages/SeatSelection';
+import SeatSelectionRound from './pages/SeatSelectionRound';
+import BookingSummaryRound from './pages/BookingSummaryRound';
 import BookingSummary from './pages/BookingSummary';
 import Dashboard from './pages/Dashboard';
 import AdminDashboard from './pages/AdminDashboard';
@@ -54,7 +56,8 @@ const App = () => {
                   <SeatSelection />
                 </ProtectedRoute>
               }
-            />
+            /><Route path="/seats-round" element={<SeatSelectionRound />} />
+<Route path="/summary-round" element={<BookingSummaryRound />} />
             <Route
               path="/booking-summary"
               element={

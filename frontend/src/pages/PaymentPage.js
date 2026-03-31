@@ -86,16 +86,45 @@ const PaymentPage = () => {
   }
 
   try {
-    const res = await createBooking({
-      flightId: bookingData.flight._id,
-      seatNumbers: bookingData.seatNumbers,
-      passengers: bookingData.passengers,
-      addOns: bookingData.addOns,
-      totalPrice: finalPrice,
-      discount
-    });
+    const groupId = "RT-" + Date.now();
 
-    alert(`Payment successful! 🎉`);
+    const outboundTotal =
+  (bookingData.outboundPricing?.totalPrice || 0) +
+  (bookingData.addOns?.outbound?.reduce((s, i) => s + i.price, 0) || 0);
+
+const returnTotal =
+  (bookingData.returnPricing?.totalPrice || 0) +
+  (bookingData.addOns?.return?.reduce((s, i) => s + i.price, 0) || 0);
+
+await Promise.all([
+
+  // always creates outbound
+  createBooking({
+    flightId: bookingData.outbound?._id || bookingData.flight._id,
+    seatNumbers: bookingData.outboundSeats || bookingData.seatNumbers,
+    passengers: bookingData.passengers,
+    addOns: bookingData.addOns.outbound||[],
+    totalPrice: outboundTotal,
+    discount,
+    groupId
+  }),
+
+  //only create return if exists
+  bookingData.return
+    ? createBooking({
+        flightId: bookingData.return._id,
+        seatNumbers: bookingData.returnSeats,
+        passengers: bookingData.passengers,
+        addOns: bookingData.addOns.return||[],
+        totalPrice: returnTotal,
+        discount,
+        groupId
+      })
+    : Promise.resolve()
+
+]);
+
+  alert("Trip Booked  &  Payment successful! 🎉");
 
     navigate('/dashboard');
 

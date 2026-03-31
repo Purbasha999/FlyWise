@@ -9,7 +9,12 @@ import './Flights.css';
 const Flights = () => {
   const navigate = useNavigate();
   const [urlParams] = useSearchParams();
-  const { setSelectedFlight, setSearchParams } = useBooking();
+  const { 
+  setSelectedFlight, 
+  setSelectedOutboundFlight, 
+  setSelectedReturnFlight, 
+  setSearchParams 
+} = useBooking();
 
 
 
@@ -28,6 +33,8 @@ const Flights = () => {
   const [flights, setFlights] = useState([]);
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState('price');
+  const [outboundFlights, setOutboundFlights] = useState([]);
+const [returnFlights, setReturnFlights] = useState([]);
 
   useEffect(() => {
     setSearchParams({ source, destination, date, passengers });
@@ -42,21 +49,47 @@ const Flights = () => {
 }, [date, passengers]);
 
   const [noFlightsOnDate, setNoFlightsOnDate] = useState(false);
+
+
+const tripType = urlParams.get('tripType');
+const returnDate = urlParams.get('returnDate');
+
 const fetchFlights = async () => {
   try {
     setLoading(true);
 
-    let res = await searchFlights({ source, destination, date, passengers });
+    if (tripType === 'round') {
 
-    if (date && res.data.flights.length === 0) {
-      
-      setNoFlightsOnDate(true);
+      // outbound flights
+      const res1 = await searchFlights({
+        source,
+        destination,
+        date,
+        passengers
+      });
 
-      const altRes = await searchFlights({ source, destination, passengers });
-      setFlights(altRes.data.flights);
+      // return flights
+      const res2 = await searchFlights({
+        source: destination,
+        destination: source,
+        date: returnDate,
+        passengers
+      });
+      console.log("OUTBOUND:", res1.data.flights);
+console.log("RETURN:", res2.data.flights);
+      setOutboundFlights(res1.data.flights || []);
+      setReturnFlights(res2.data.flights || []);
+
     } else {
-      setNoFlightsOnDate(false);
-      setFlights(res.data.flights);
+
+      const res = await searchFlights({
+        source,
+        destination,
+        date,
+        passengers
+      });
+
+      setFlights(res.data.flights || []);
     }
 
   } catch (err) {
@@ -66,11 +99,28 @@ const fetchFlights = async () => {
   }
 };
 
-  const handleSelectFlight = (flight) => {
-    setSelectedFlight(flight);
-    navigate(`/seats?passengers=${passengers}&date=${date || ''}`);
-  };
+const handleSelectFlight = (flight, type) => {
 
+  if (tripType === 'round') {
+
+    if (type === 'outbound') {
+      setSelectedOutboundFlight(flight);
+      toast.success("Outbound selected");
+      return;
+    }
+
+    if (type === 'return') {
+      setSelectedReturnFlight(flight);
+      toast.success("Return selected");
+
+      navigate('/seats-round?passengers=' + passengers);
+    }
+
+  } else {
+    setSelectedFlight(flight);
+    navigate(`/seats?passengers=${passengers}`);
+  }
+};
   const sorted = [...flights].sort((a, b) => {
     if (sortBy === 'price') return (a.dynamicPrice || a.basePrice) - (b.dynamicPrice || b.basePrice);
     if (sortBy === 'duration') return a.duration - b.duration;
@@ -158,7 +208,60 @@ const fetchFlights = async () => {
             <div className="spinner spinner-lg" />
             <p>Searching best flights for you...</p>
           </div>
-        ) : sorted.length === 0 ? (
+        ) : tripType === 'round' ? (
+
+  outboundFlights.length === 0 && returnFlights.length === 0 ? (
+
+    <div className="no-flights">
+      <div className="no-flights-icon">✈️</div>
+      <h3>No flights found</h3>
+      <p>No outbound or return flights available</p>
+      <button className="btn btn-primary" onClick={() => navigate('/')}>
+        Search Again
+      </button>
+    </div>
+
+  ) : (
+
+    <>
+      {/* OUTBOUND */}
+      <h2 className="section-title">Outbound Flights</h2>
+      <div className="flight-list">
+        {outboundFlights.map(f => (
+          <FlightCard
+            key={f._id}
+            flight={f}
+            passengers={passengers}
+            onSelect={() => handleSelectFlight(f, 'outbound')}
+          />
+        ))}
+      </div>
+
+      {/* RETURN */}
+      <h2 className="section-title">Return Flights</h2>
+      <div className="flight-list">
+        {returnFlights.length === 0 ? (
+          <div className="no-date-warning">
+            ❌ No return flights on selected date  
+            <br />
+            ✅ Try another date
+          </div>
+        ) : (
+          returnFlights.map(f => (
+            <FlightCard
+              key={f._id}
+              flight={f}
+              passengers={passengers}
+              onSelect={() => handleSelectFlight(f, 'return')}
+            />
+          ))
+        )}
+      </div>
+    </>
+
+  )
+
+) : sorted.length === 0 ? (
           <div className="no-flights">
             <div className="no-flights-icon">✈️</div>
             <h3>No flights found</h3>
@@ -174,11 +277,50 @@ const fetchFlights = async () => {
           ✅ Showing flights on other dates
         </div>
       )}
-          <div className="flight-list">
-            {sorted.map(flight => (
-              <FlightCard key={flight._id} flight={flight} passengers={passengers} onSelect={handleSelectFlight} />
-            ))}
-          </div>
+          {tripType === 'round' ? (
+
+  <div>
+
+    <h2 className="section-title">Outbound Flights</h2>
+    <div className="flight-list">
+      {outboundFlights.map(f => (
+        <FlightCard
+          key={f._id}
+          flight={f}
+          passengers={passengers}
+          onSelect={() => handleSelectFlight(f, 'outbound')}
+        />
+      ))}
+    </div>
+
+    <h2 className="section-title">Return Flights</h2>
+    <div className="flight-list">
+      {returnFlights.map(f => (
+        <FlightCard
+          key={f._id}
+          flight={f}
+          passengers={passengers}
+          onSelect={() => handleSelectFlight(f, 'return')}
+        />
+      ))}
+    </div>
+
+  </div>
+
+) : (
+
+  <div className="flight-list">
+    {sorted.map(f => (
+      <FlightCard
+        key={f._id}
+        flight={f}
+        passengers={passengers}
+        onSelect={handleSelectFlight}
+      />
+    ))}
+  </div>
+
+)}
           </>
         )}
       </div>

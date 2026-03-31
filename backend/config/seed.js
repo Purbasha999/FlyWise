@@ -10,7 +10,6 @@ const connectDB = require('../config/db');
 
 mongoose.connect(process.env.MONGO_URI);
 
-// Default layout constants — change these and everything updates automatically
 const DEFAULT_COLUMNS = ['A', 'B', 'C', 'D', 'E', 'F'];
 const DEFAULT_ROWS = 20;
 const BUSINESS_ROWS = 3; // rows 1–3 are Business class
@@ -46,7 +45,7 @@ const seed = async () => {
   await PricingRule.deleteMany({});
   await Booking.deleteMany({});
 
-  // Create admin
+  //admin
   await User.create({
     name: 'Admin User',
     email: 'admin@flywise.com',
@@ -55,7 +54,7 @@ const seed = async () => {
     phone: '9999999999',
   });
 
-  // Create test user
+  //test user
   await User.create({
     name: 'Test User',
     email: 'user@flywise.com',
@@ -102,7 +101,7 @@ const seed = async () => {
       businessRows: BUSINESS_ROWS,
     });
 
-    await createSeats(flight._id); // uses DEFAULT_ROWS + DEFAULT_COLUMNS automatically
+    await createSeats(flight._id); 
     console.log(`Created flight ${f.flightNumber} with ${totalSeats} seats (${DEFAULT_ROWS} rows × ${DEFAULT_COLUMNS.length} cols)`);
   }
 
