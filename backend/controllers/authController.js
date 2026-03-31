@@ -1,8 +1,8 @@
 const User = require('../models/User');
 const { generateToken } = require('../middleware/auth');
 
-// @desc    Register user
-// @route   POST /api/auth/register
+//Register user
+//POST /api/auth/register
 const register = async (req, res) => {
   const { name, email, password, phone } = req.body;
 
@@ -31,8 +31,8 @@ const register = async (req, res) => {
   });
 };
 
-// @desc    Login user
-// @route   POST /api/auth/login
+//Login user
+//POST /api/auth/login
 const login = async (req, res) => {
   const { email, password } = req.body;
 
@@ -59,14 +59,14 @@ const login = async (req, res) => {
   });
 };
 
-// @desc    Get current user
-// @route   GET /api/auth/me
+// Get current user
+// GET /api/auth/me
 const getMe = async (req, res) => {
   res.json({ success: true, user: req.user });
 };
 
-// @desc    Update profile
-// @route   PUT /api/auth/profile
+//   Update profile
+//   PUT /api/auth/profile
 const updateProfile = async (req, res) => {
   const { name, phone } = req.body;
   const user = await User.findByIdAndUpdate(
