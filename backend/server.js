@@ -20,7 +20,7 @@ app.use(limiter);
 app.use(cors({
   origin: [
     "http://localhost:3000",
-    "https://fly-wise-nine.vercel.app/"
+    "https://fly-wise-nine.vercel.app"
   ],
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
