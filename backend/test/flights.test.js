@@ -1,38 +1,38 @@
 const request = require("supertest");
 const app = require("../server");
-const Flight = require("../models/Flight");
 const User = require("../models/User");
 const jwt = require("jsonwebtoken");
-process.env.JWT_SECRET = "testsecret";
+
 let adminToken;
 
 beforeEach(async () => {
-  await Flight.deleteMany({});
   await User.deleteMany({});
-
   const admin = await User.create({
-    name: "admin",
-    email: "a@test.com",
+    name: "Admin",
+    email: "admin@test.com",
     password: "123456",
     role: "ADMIN"
   });
 
-  adminToken = jwt.sign({ id: admin._id }, process.env.JWT_SECRET);
+  adminToken = jwt.sign(
+  { id: admin._id.toString() },
+  process.env.JWT_SECRET
+);
 });
 
 describe("Flights", () => {
 
-  it("fail search missing params", async () => {
+  test("search flights missing params", async () => {
     const res = await request(app).get("/api/flights/search");
-    expect(res.statusCode).toBe(400);
+    expect(res.status).toBe(400);
   });
 
-  it("create flight (admin)", async () => {
+  test("create flight (admin)", async () => {
     const res = await request(app)
       .post("/api/flights")
       .set("Authorization", `Bearer ${adminToken}`)
       .send({
-        flightNumber: "AI1",
+        flightNumber: "AI101",
         airline: "Air India",
         airlineCode: "AI",
         sourceCity: "A",
@@ -40,16 +40,20 @@ describe("Flights", () => {
         destinationCity: "B",
         destinationCode: "B",
         departureTime: new Date(),
-        arrivalTime: new Date(),
-        basePrice: 1000,
-        rows: 5,
-        columns: 4,
+        arrivalTime: new Date(Date.now() + 100000),
+        basePrice: 5000,
+        rows: 2,
+        columns: 2,
         businessRows: 1,
-        totalSeats: 20,
-        availableSeats: 20
+        totalSeats: 4
       });
 
-    expect(res.statusCode).toBe(201);
+    expect(res.status).toBe(201);
+  });
+
+  test("get all flights without admin → fail", async () => {
+    const res = await request(app).get("/api/flights");
+    expect(res.status).toBe(401);
   });
 
 });

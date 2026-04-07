@@ -200,7 +200,6 @@ const updateFlight = async (req, res) => {
   await flight.save();
   if (!flight) return res.status(404).json({ success: false, message: 'Flight not found.' });
   res.json({ success: true, flight });
-  res.json({ success: true, flight });
 };
 
 //Delete flight (admin)

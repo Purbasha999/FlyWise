@@ -1,7 +1,7 @@
+
 const request = require("supertest");
 const app = require("../server");
 const AddOn = require("../models/AddOn");
-process.env.JWT_SECRET = "testsecret";
 describe("Addons", () => {
 
   beforeEach(async () => {

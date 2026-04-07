@@ -2,7 +2,6 @@ const request = require("supertest");
 const app = require("../server");
 const User = require("../models/User");
 const jwt = require("jsonwebtoken");
-process.env.JWT_SECRET = "testsecret";
 let token;
 
 beforeEach(async () => {
@@ -29,7 +28,7 @@ describe("Pricing Rules", () => {
       .post("/api/pricing-rules")
       .set("Authorization", `Bearer ${token}`)
       .send({
-        name: "Demand",
+        name: "High Demand",
         type: "DEMAND",
         charge: 100
       });
