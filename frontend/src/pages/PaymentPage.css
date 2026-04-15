@@ -1,0 +1,140 @@
+.payment-container {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 24px;
+  padding: 40px;
+  background: #f5f7fb;
+  min-height: 100vh;
+}
+
+/* CARD */
+.card {
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.06);
+}
+
+/* LEFT */
+.payment-left {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* RIGHT */
+.payment-right {
+  position: sticky;
+  top: 20px;
+  height: fit-content;
+}
+
+/* PROMO */
+.promo-box {
+  display: flex;
+  gap: 10px;
+}
+
+.promo-box input {
+  flex: 1;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+}
+
+.promo-box button {
+  background: #1a73e8;
+  color: white;
+  border: none;
+  padding: 10px 14px;
+  border-radius: 8px;
+}
+
+/* METHODS */
+.payment-options {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.method-tile {
+  flex: 1;
+  text-align: center;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.method-tile:hover {
+  border-color: #1a73e8;
+}
+
+.method-tile.active {
+  background: #1a73e8;
+  color: white;
+  border-color: #1a73e8;
+}
+
+/* FORM */
+.payment-form input,
+.payment-form select {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+}
+
+/* CARD ROW */
+.card-row {
+  display: flex;
+  gap: 10px;
+}
+
+/* UPI PIN */
+.upi-pin-box input {
+  text-align: center;
+  font-size: 18px;
+  letter-spacing: 8px;
+}
+
+/* SUMMARY */
+.summary-card {
+  text-align: left;
+}
+
+.price-row {
+  display: flex;
+  justify-content: space-between;
+  margin: 8px 0;
+}
+
+.price-row.discount {
+  color: green;
+}
+
+.price-total {
+  font-size: 26px;
+  font-weight: bold;
+  margin: 16px 0;
+}
+
+/* PAY BUTTON */
+.pay-btn {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, #1a73e8, #0052cc);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.pay-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+}

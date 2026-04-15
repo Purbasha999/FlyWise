@@ -1,0 +1,39 @@
+.round-container {
+  display: flex;
+  gap: 24px;
+  padding: 24px;
+}
+
+.flight-panel {
+  flex: 1;
+  background: rgba(255,255,255,0.04);
+  border-radius: 20px;
+  padding: 20px;
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.flight-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.continue-bar {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  padding: 16px;
+  display: flex;
+  justify-content: center;
+}
+
+.continue-btn {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  border: none;
+  padding: 14px 28px;
+  border-radius: 12px;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+}
